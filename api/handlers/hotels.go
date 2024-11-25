@@ -12,7 +12,7 @@ type Hotels struct {
 	l *log.Logger
 }
 
-// NewProducts creates a products handler with the given logger
+// NewHotels creates a products handler with the given logger
 func NewHotels(l *log.Logger) *Hotels {
 	return &Hotels{l}
 }
@@ -40,7 +40,7 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 	lh := data.GetHotels()
 
 	// serialize the list to JSON
-	if err := lh.ToJSON(w); err != nil {
+	if err := data.ToJSON(lh, w); err != nil {
 		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
 	}
 
@@ -53,7 +53,7 @@ func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	hotel := &data.Hotel{}
 
 	// deserialize the struct from JSON
-	if err := hotel.FromJSON(r.Body); err != nil {
+	if err := data.FromJSON(hotel, r.Body); err != nil {
 		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
 	}
 
