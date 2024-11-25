@@ -25,6 +25,10 @@ func GetHotels() Hotels {
 	return hotelList
 }
 
+func GetHotel(h Hotel) Hotel {
+	return h
+}
+
 // AddHotel adds a new hotel to the data store
 func AddHotel(h *Hotel) {
 	h.ID = hotelList[len(hotelList)].ID
