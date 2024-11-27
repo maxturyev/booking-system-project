@@ -17,10 +17,12 @@ func main() {
 
 	// create a hotel handler
 	hh := handlers.NewHotels(l)
+	ch := handlers.NewClient(l)
 
 	// create a new serve mux and register the handler
 	sm := http.NewServeMux()
-	sm.Handle("/", hh)
+	sm.Handle("/hotel/", hh)
+	sm.Handle("/client/", ch)
 
 	// create a new server
 	s := http.Server{

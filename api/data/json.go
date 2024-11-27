@@ -6,13 +6,13 @@ import (
 )
 
 // FromJSON deserializes the struct from JSON
-func (h *Hotel) FromJSON(w io.Reader) error {
-	e := json.NewDecoder(w)
-	return e.Decode(h)
+func FromJSON(i interface{}, r io.Reader) error {
+	e := json.NewDecoder(r)
+	return e.Decode(i)
 }
 
 // ToJSON serializes the collection to JSON
-func (h *Hotels) ToJSON(w io.Writer) error {
+func ToJSON(i interface{}, w io.Writer) error {
 	e := json.NewEncoder(w)
-	return e.Encode(h)
+	return e.Encode(i)
 }
