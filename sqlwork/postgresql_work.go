@@ -5,40 +5,17 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/maxturyev/booking-system-project/consts"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-const (
-	host     = "localhost"
-	port     = "5433"
-	user     = "postgres"
-	password = "password123"
-	dbname   = "database"
-)
-
-type BookInfo struct {
-	hotel_id      int32
-	date_start    time.Time
-	date_end      time.Time
-	room_category int32
-	room_count    int32
-	price         int32
-	guest_amount  int32
-	is_cancelled  bool
-}
-
-func (book BookInfo) GetInfo() string {
-	return fmt.Sprintf("hotel_id: %d\ndate_start: %s\ndate_end %s\nroom_category: %d\nroom_count: %d\nprice: %d\n"+
-		"guest_amount: %d\nis_cancelled: %t\n", book.hotel_id, book.date_start, book.date_end, book.room_category,
-		book.room_count, book.price, book.guest_amount, book.is_cancelled)
-}
 
 // Понять зачем sslmode
 // Для начала работы прописать в константах правильные параметры для локальной машины, после этого создать бд,
 // создать таблицу и после этого можно добавлять заказы. Проверять, правильно ли все получилось, можно через GetBookInfo
 func CreateDatabase(namedb string) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", host, port, user, password)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", consts.Host, consts.Port,
+		consts.User, consts.Password)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -50,7 +27,8 @@ func CreateDatabase(namedb string) {
 }
 
 func DropDatabase(namedb string) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", host, port, user, password)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", consts.Host, consts.Port,
+		consts.User, consts.Password)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -61,22 +39,21 @@ func DropDatabase(namedb string) {
 	db.Exec(dropDatabaseCommand)
 }
 
-func CreateTable(nameTable string) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+func CreateTable(dbname, nameTable, command string) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", consts.Host, consts.Port,
+		consts.User, consts.Password, dbname)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		panic(err)
 	}
 
-	createTableCommand := fmt.Sprintf("CREATE TABLE %s (hotel_id SERIAL PRIMARY KEY, date_start DATE, date_end DATE, "+
-		"room_category INTEGER DEFAULT 0, room_count INTEGER DEFAULT 0, price INTEGER DEFAULT 0,"+
-		"guest_amount INTEGER DEFAULT 0, is_cancelled BOOLEAN DEFAULT FALSE)", nameTable)
-	db.Exec(createTableCommand)
+	db.Exec(command, nameTable)
 }
 
-func DropTable(nameTable string) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+func DropTable(dbname, nameTable string) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", consts.Host, consts.Port,
+		consts.User, consts.Password, dbname)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -87,18 +64,29 @@ func DropTable(nameTable string) {
 	db.Exec(dropTableCommand)
 }
 
-func InsertInto(nameTable string, hotel_id int32, date_start, date_end string,
+func InsertInto(dbname, nameTable, command string, hotel_id int32, date_start, date_end string,
 	room_category, room_count, price, guest_amount int32, is_cancelled bool) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", consts.Host, consts.Port,
+		consts.User, consts.Password, dbname)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		panic(err)
 	}
 
-	db.Exec("INSERT INTO ? (hotel_id, date_start, date_end, room_category, "+
-		"room_count, price, guest_amount, is_cancelled) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", nameTable,
-		hotel_id, date_start, date_end, room_category, room_count, price, guest_amount, is_cancelled)
+	db.Exec(command, nameTable, hotel_id, date_start, date_end, room_category, room_count, price, guest_amount, is_cancelled)
+}
+
+func DeleteFrom(dbname, nameTable, command string, hotel_id int32) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", consts.Host, consts.Port,
+		consts.User, consts.Password, dbname)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	if err != nil {
+		panic(err)
+	}
+
+	db.Exec(command, nameTable, hotel_id)
 }
 
 func GetBookInfo(namedb string, hotel_id int) BookInfo {
@@ -114,7 +102,8 @@ func GetBookInfo(namedb string, hotel_id int) BookInfo {
 	// 	2, 1, 12000, 2, true)
 	// db.Exec(createDatabaseCommand)
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", consts.Host, consts.Port,
+		consts.User, consts.Password, consts.DBBooking)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -136,8 +125,6 @@ func GetBookInfo(namedb string, hotel_id int) BookInfo {
 	answer.price = results[0]["price"].(int32)
 	answer.guest_amount = results[0]["guest_amount"].(int32)
 	answer.is_cancelled = results[0]["is_cancelled"].(bool)
-
-	fmt.Println(answer.GetInfo())
 
 	return answer
 }
