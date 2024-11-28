@@ -1,10 +1,12 @@
-package handlers
+package api
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/maxturyev/booking-system-project/api/data"
+	"github.com/maxturyev/booking-system-project/db"
+	"github.com/maxturyev/booking-system-project/db/funcs"
+	"github.com/maxturyev/booking-system-project/db/handlers"
 )
 
 // Hotels is a http.Handler
@@ -37,26 +39,25 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 	h.l.Println("Handle GET")
 
 	// fetch the hotels from the datastore
-	lh := data.GetHotels()
+	lh := handlers.GetHotels()
 
 	// serialize the list to JSON
-	if err := data.ToJSON(lh, w); err != nil {
+	if err := db.ToJSON(lh, w); err != nil {
 		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
 	}
-
 }
 
 // addHotel adds a hotel to the date store
 func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	h.l.Println("Handle POST")
 
-	hotel := &data.Hotel{}
+	hotel := &handlers.Hotel{}
 
 	// deserialize the struct from JSON
-	if err := data.FromJSON(hotel, r.Body); err != nil {
+	if err := db.FromJSON(hotel, r.Body); err != nil {
 		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
 	}
 
 	// add a hotel to the data store
-	data.AddHotel(hotel)
+	funcs.AddHotel(hotel)
 }

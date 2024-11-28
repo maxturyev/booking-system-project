@@ -1,14 +1,21 @@
-package data
+package handlers
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/maxturyev/booking-system-project/consts"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
+
+var hotel_db *gorm.DB
 
 // Hotel defines the structure for an API hotel
 type Hotel struct {
 	ID             int    `json:"id"`
 	Name           string `json:"name"`
-	Hotelier       int    `json:"hotelier"`
+	Hotelier       int    `json:"hotelier_id"`
 	Rating         int    `json:"rating"`
 	Country        string `json:"country"`
 	Address        string `json:"address"`
@@ -21,15 +28,27 @@ type Hotel struct {
 // Hotels is a collection of Product
 type Hotels []*Hotel
 
+func NewHotelConnection() error {
+	// Initialize connection to Hotel database
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", consts.Host, consts.Port, consts.User, consts.Password, consts.DBHotel)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+
+	hotel_db = db
+
+	return nil
+}
+
 // GetHotels returns a list of hotels
 func GetHotels() Hotels {
 	return hotelList
 }
 
-// AddHotel adds a new hotel to the data store
-func AddHotel(h *Hotel) {
-	h.ID = hotelList[len(hotelList)-1].ID + 1
-	hotelList = append(hotelList, h)
+func InsertSingle(tableName string, hotel *Hotel) {
+	hotel_db.Table(tableName).Create(hotel)
 }
 
 // Example data store

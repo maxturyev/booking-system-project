@@ -1,4 +1,4 @@
-package data
+package handlers
 
 import (
 	"time"
