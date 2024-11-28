@@ -1,4 +1,4 @@
-package data
+package handlers
 
 // Client defines the structure for an API client
 type Client struct {

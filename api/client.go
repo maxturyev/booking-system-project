@@ -1,10 +1,11 @@
-package handlers
+package api
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/maxturyev/booking-system-project/api/data"
+	"github.com/maxturyev/booking-system-project/db"
+	"github.com/maxturyev/booking-system-project/db/handlers"
 )
 
 // Hotels is a http.Handler
@@ -41,10 +42,10 @@ func (c *Client) getHotels(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle GET hotels")
 
 	// fetch the hotels from the datastore
-	lh := data.GetHotels()
+	lh := handlers.GetHotels()
 
 	// serialize the list to JSON
-	if err := data.ToJSON(lh, w); err != nil {
+	if err := db.ToJSON(lh, w); err != nil {
 		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
 	}
 }
@@ -53,15 +54,15 @@ func (c *Client) getHotels(w http.ResponseWriter, r *http.Request) {
 func (c *Client) createBooking(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle POST")
 
-	booking := &data.Booking{}
+	booking := &handlers.Booking{}
 
 	// deserialize the struct from JSON
-	if err := data.FromJSON(booking, r.Body); err != nil {
+	if err := db.FromJSON(booking, r.Body); err != nil {
 		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
 	}
-	for _, hotel := range data.GetHotels() {
+	for _, hotel := range handlers.GetHotels() {
 		if hotel.ID == booking.HotelID && hotel.RoomsAvailable > 0 {
-			data.CreateBooking(booking)
+			handlers.CreateBooking(booking)
 			hotel.RoomsAvailable -= 1
 		}
 	}
@@ -72,10 +73,10 @@ func (c *Client) getBookings(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle GET bookings")
 
 	// fetch the hotels from the datastore
-	lb := data.GetBookings()
+	lb := handlers.GetBookings()
 
 	// serialize the list to JSON
-	if err := data.ToJSON(lb, w); err != nil {
+	if err := db.ToJSON(lb, w); err != nil {
 		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
 	}
 }
