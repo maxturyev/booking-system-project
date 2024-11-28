@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -14,18 +15,15 @@ import (
 
 func main() {
 	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
-	//	lr := log.New(os.Stdout,"hotelier-api",log.LstdFlags)
 
 	// create a hotel handler
 	hh := handlers.NewHotels(l)
-
-	// create a hoteleir handler
-	//	hhr := handlers.NewHoteliers(lr)
+	ch := handlers.NewClient(l)
 
 	// create a new serve mux and register the handler
 	sm := http.NewServeMux()
-	sm.Handle("/", hh)
-	//	sm.Hanadle("/hotelier",hhr)
+	sm.Handle("/hotel/", hh)
+	sm.Handle("/client/", ch)
 
 	// create a new server
 	s := http.Server{
@@ -57,3 +55,4 @@ func main() {
 
 	l.Println("Server exited properly")
 }
+
