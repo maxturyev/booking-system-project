@@ -1,8 +1,11 @@
+
 package handlers
 
 import (
 	"log"
 	"net/http"
+	"regexp"
+	"strconv"
 
 	"github.com/maxturyev/booking-system-project/api/data"
 )
@@ -12,7 +15,7 @@ type Hotels struct {
 	l *log.Logger
 }
 
-// NewHotels creates a products handler with the given logger
+// NewProducts creates a products handler with the given logger
 func NewHotels(l *log.Logger) *Hotels {
 	return &Hotels{l}
 }
@@ -21,8 +24,17 @@ func NewHotels(l *log.Logger) *Hotels {
 func (h *Hotels) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// handle the request to get a list of hotels
 	if r.Method == http.MethodGet {
-		h.getHotels(w)
-		return
+		reg := regexp.MustCompile(`/hotels/([0-9]+)`)
+		matches := reg.FindStringSubmatch(r.URL.Path)
+		if len(matches) != 1 {
+			hotelID, _ := strconv.Atoi(matches[1])
+			h.GetHotelsByID(w, r, hotelID)
+			return
+		}
+		if r.URL.Path == "/hotels" {
+			h.getHotels(w)
+			return
+		}
 	}
 
 	// handle the request to add a hotel
@@ -43,6 +55,21 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 	if err := data.ToJSON(lh, w); err != nil {
 		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
 	}
+
+}
+
+func (h *Hotels) GetHotelsByID(w http.ResponseWriter, r *http.Request, ID int) {
+	h.l.Println("Handle GET")
+	for _, curr := range data.GetHotels() {
+		if curr.ID == ID {
+			data.ToJSON(*curr, w)
+		}
+	}
+	http.Error(w, "This ID do not exist", http.StatusNotFound)
+}
+
+func (h *Hotels) changeNameHotel(w http.ResponseWriter, r *http.Request) {
+	h.l.Println("Handle POST")
 
 }
 
