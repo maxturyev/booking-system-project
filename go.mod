@@ -1,4 +1,3 @@
-
 module github.com/maxturyev/booking-system-project
 
 go 1.23.2
@@ -7,6 +6,11 @@ require (
 	github.com/lib/pq v1.10.9
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
+)
+
+require (
+	github.com/kr/text v0.2.0 // indirect
+	github.com/rogpeppe/go-internal v1.13.1 // indirect
 )
 
 require (
@@ -19,5 +23,5 @@ require (
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 )
-
