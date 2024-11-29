@@ -14,5 +14,4 @@ func NewHoteliers(l *log.Logger) *Hoteliers {
 }
 
 func (h *Hoteliers) ServeHTTP(w http.Response, r *http.Request) {
-
 }

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/maxturyev/booking-system-project/db"
-	"github.com/maxturyev/booking-system-project/db/handlers"
 )
 
 // Hotels is a http.Handler
@@ -42,7 +41,6 @@ func (c *Client) getHotels(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle GET hotels")
 
 	// fetch the hotels from the datastore
-	lh := handlers.GetHotels()
 
 	// serialize the list to JSON
 	if err := db.ToJSON(lh, w); err != nil {

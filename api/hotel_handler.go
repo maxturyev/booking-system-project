@@ -5,18 +5,19 @@ import (
 	"net/http"
 
 	"github.com/maxturyev/booking-system-project/db"
-	"github.com/maxturyev/booking-system-project/db/funcs"
-	"github.com/maxturyev/booking-system-project/db/handlers"
+	"github.com/maxturyev/booking-system-project/db/hotels_data"
+	"gorm.io/gorm"
 )
 
 // Hotels is a http.Handler
 type Hotels struct {
-	l *log.Logger
+	l  *log.Logger
+	db *gorm.DB
 }
 
 // NewHotels creates a products handler with the given logger
-func NewHotels(l *log.Logger) *Hotels {
-	return &Hotels{l}
+func NewHotels(l *log.Logger, db *gorm.DB) *Hotels {
+	return &Hotels{l, db}
 }
 
 // ServeHTTP is the main entry point for the handler and satisfires the http.Handler interface
@@ -51,7 +52,7 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	h.l.Println("Handle POST")
 
-	hotel := &handlers.Hotel{}
+	hotel := &Hotel{}
 
 	// deserialize the struct from JSON
 	if err := db.FromJSON(hotel, r.Body); err != nil {
@@ -59,5 +60,5 @@ func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add a hotel to the data store
-	funcs.AddHotel(hotel)
+	hotels_data.CreateHotel(hotel.db)
 }

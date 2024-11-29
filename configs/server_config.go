@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/maxturyev/booking-system-project/api"
+	"github.com/maxturyev/booking-system-project/db"
 	"gopkg.in/yaml.v2"
 )
 
@@ -106,11 +107,13 @@ func NewRouter() *http.ServeMux {
 	// Create logger
 	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
 
+	hotel_db := db.NewConnection()
+
 	// Create router and define routes and return that router
 	router := http.NewServeMux()
 
 	// Create handlers
-	hh := api.NewHotels(l)
+	hh := api.NewHotels(l, hotel_db)
 	ch := api.NewClient(l)
 
 	router.Handle("/hotel/", hh)
