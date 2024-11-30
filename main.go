@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/maxturyev/booking-system-project/configs"
-	"github.com/maxturyev/booking-system-project/db"
 )
 
 func main() {
@@ -21,7 +20,4 @@ func main() {
 
 	// Run the server
 	cfg.Run()
-
-	// Connect to system databases
-	db.NewConnection()
 }
