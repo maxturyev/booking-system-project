@@ -3,19 +3,22 @@ package db
 import (
 	"fmt"
 
+	_ "github.com/lib/pq"
 	"github.com/maxturyev/booking-system-project/consts"
-
+	"github.com/maxturyev/booking-system-project/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// NewConnection establishes a connection to both databases
-func NewConnection() *gorm.DB {
+var dbase *gorm.DB
+
+// Initialize a database
+// Creating tables from models
+func Init() *gorm.DB {
 	hotel_db, err := NewHotelConnection()
 	if err != nil {
-
+		panic("ERROR")
 	}
-
 	// NewBookingConnection()
 
 	return hotel_db
@@ -30,6 +33,7 @@ func NewHotelConnection() (*gorm.DB, error) {
 	if err != nil {
 		return db, err
 	}
+	db.AutoMigrate(&models.Booking{}, &models.Client{}, &models.Hotel{}, &models.Hotelier{})
 
 	return db, nil
 }
