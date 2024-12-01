@@ -3,8 +3,6 @@ package api
 import (
 	"log"
 	"net/http"
-
-	"github.com/maxturyev/booking-system-project/db"
 )
 
 // Hotels is a http.Handler
@@ -23,19 +21,20 @@ func (c *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		switch r.URL.Path {
 		case "/client/hotels":
-			c.getHotels(w, r)
+		//	c.getHotels(w, r)
 		case "/client/bookings":
-			c.getBookings(w, r)
+			//		c.getBookings(w, r)
 		}
 	}
 
 	// handle the request to add a hotel
 	if r.Method == http.MethodPost {
-		c.createBooking(w, r)
+		//	c.createBooking(w, r)
 		return
 	}
 }
 
+/*
 // getHotels returns the hotels from the date store
 func (c *Client) getHotels(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle GET hotels")
@@ -78,3 +77,4 @@ func (c *Client) getBookings(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
 	}
 }
+*/

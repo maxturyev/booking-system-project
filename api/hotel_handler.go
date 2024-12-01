@@ -6,6 +6,7 @@ import (
 
 	"github.com/maxturyev/booking-system-project/db"
 	"github.com/maxturyev/booking-system-project/db/hotels_data"
+	"github.com/maxturyev/booking-system-project/models"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +41,7 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 	h.l.Println("Handle GET")
 
 	// fetch the hotels from the datastore
-	lh := handlers.GetHotels()
+	lh := hotels_data.GetHotels(h.db)
 
 	// serialize the list to JSON
 	if err := db.ToJSON(lh, w); err != nil {
@@ -52,13 +53,13 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	h.l.Println("Handle POST")
 
-	hotel := &Hotel{}
+	var hotel models.Hotel
 
 	// deserialize the struct from JSON
-	if err := db.FromJSON(hotel, r.Body); err != nil {
+	if err := db.FromJSON(&hotel, r.Body); err != nil {
 		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
 	}
 
 	// add a hotel to the data store
-	hotels_data.CreateHotel(hotel.db)
+	hotels_data.CreateHotel(h.db, hotel)
 }

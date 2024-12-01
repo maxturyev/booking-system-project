@@ -6,6 +6,6 @@ import (
 )
 
 // CreateHotel adds a new hotel to the data store
-func GetHotel(db *gorm.DB) models.Hotel {
-	return nil
+func CreateHotel(db *gorm.DB, hotel models.Hotel) {
+	db.Create(&hotel)
 }
