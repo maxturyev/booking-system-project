@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/maxturyev/booking-system-project/db"
-	"github.com/maxturyev/booking-system-project/db/hotels_data"
+	hotels_data_creates "github.com/maxturyev/booking-system-project/db/hotels_data/CREATE"
+	hotels_data_gets "github.com/maxturyev/booking-system-project/db/hotels_data/GET"
 	"github.com/maxturyev/booking-system-project/models"
 	"gorm.io/gorm"
 )
@@ -41,7 +42,7 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 	h.l.Println("Handle GET")
 
 	// fetch the hotels from the datastore
-	lh := hotels_data.GetHotels(h.db)
+	lh := hotels_data_gets.GetHotels(h.db)
 
 	// serialize the list to JSON
 	if err := db.ToJSON(lh, w); err != nil {
@@ -61,5 +62,5 @@ func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add a hotel to the data store
-	hotels_data.CreateHotel(h.db, hotel)
+	hotels_data_creates.CreateHotel(h.db, hotel)
 }
