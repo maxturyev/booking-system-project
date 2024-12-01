@@ -39,42 +39,42 @@ func (c *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (c *Client) getHotels(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle GET hotels")
 
-	// fetch the hotels from the datastore
+	// // fetch the hotels from the datastore
 
-	// serialize the list to JSON
-	if err := db.ToJSON(lh, w); err != nil {
-		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
-	}
+	// // serialize the list to JSON
+	// if err := db.ToJSON(lh, w); err != nil {
+	// 	http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
+	// }
 }
 
 // createBooking creates a new booking
 func (c *Client) createBooking(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle POST")
 
-	booking := &handlers.Booking{}
+	// booking := &handlers.Booking{}
 
-	// deserialize the struct from JSON
-	if err := db.FromJSON(booking, r.Body); err != nil {
-		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
-	}
-	for _, hotel := range handlers.GetHotels() {
-		if hotel.ID == booking.HotelID && hotel.RoomsAvailable > 0 {
-			handlers.CreateBooking(booking)
-			hotel.RoomsAvailable -= 1
-		}
-	}
+	// // deserialize the struct from JSON
+	// if err := db.FromJSON(booking, r.Body); err != nil {
+	// 	http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
+	// }
+	// for _, hotel := range handlers.GetHotels() {
+	// 	if hotel.ID == booking.HotelID && hotel.RoomsAvailable > 0 {
+	// 		handlers.CreateBooking(booking)
+	// 		hotel.RoomsAvailable -= 1
+	// 	}
+	// }
 }
 
 // getHotels returns the hotels from the date store
 func (c *Client) getBookings(w http.ResponseWriter, r *http.Request) {
 	c.l.Println("Handle GET bookings")
 
-	// fetch the hotels from the datastore
-	lb := handlers.GetBookings()
+	// // fetch the hotels from the datastore
+	// lb := handlers.GetBookings()
 
-	// serialize the list to JSON
-	if err := db.ToJSON(lb, w); err != nil {
-		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
-	}
+	// // serialize the list to JSON
+	// if err := db.ToJSON(lb, w); err != nil {
+	// 	http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
+	// }
 }
 */
