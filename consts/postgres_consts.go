@@ -2,11 +2,11 @@ package consts
 
 const (
 	Host      = "localhost"
-	Port      = "5432"
+	Port      = "5433"
 	User      = "postgres"
-	Password  = "postgres"
-	DBBooking = "Booking Data"
-	DBHotel   = "Hotel Data"
+	Password  = "Alan2805"
+	DBBooking = "BookingData"
+	DBHotel   = "postgres"
 )
 
 const (

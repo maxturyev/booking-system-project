@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/maxturyev/booking-system-project/api"
 	"github.com/maxturyev/booking-system-project/db"
 	"gopkg.in/yaml.v2"
@@ -107,17 +108,17 @@ func NewRouter() *http.ServeMux {
 	// Create logger
 	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
 
-	hotel_db := db.NewConnection()
+	hotel_db := db.Init()
 
 	// Create router and define routes and return that router
 	router := http.NewServeMux()
 
 	// Create handlers
 	hh := api.NewHotels(l, hotel_db)
-	ch := api.NewClient(l)
+	//	ch := api.NewClient(l)
 
 	router.Handle("/hotel/", hh)
-	router.Handle("/client/", ch)
+	//	router.Handle("/client/", ch)
 
 	return router
 }

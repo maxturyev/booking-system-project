@@ -20,4 +20,5 @@ func main() {
 
 	// Run the server
 	cfg.Run()
+
 }

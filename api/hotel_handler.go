@@ -4,6 +4,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/maxturyev/booking-system-project/db"
+	hotels_data_creates "github.com/maxturyev/booking-system-project/db/hotels_data/CREATE"
+	hotels_data_gets "github.com/maxturyev/booking-system-project/db/hotels_data/GET"
+	"github.com/maxturyev/booking-system-project/models"
 	"gorm.io/gorm"
 )
 
@@ -37,26 +41,26 @@ func (h *Hotels) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *Hotels) getHotels(w http.ResponseWriter) {
 	h.l.Println("Handle GET")
 
-	// // fetch the hotels from the datastore
-	// lh := hotels_data.GetHotels(h.db)
+	// fetch the hotels from the datastore
+	lh := hotels_data_gets.GetHotels(h.db)
 
-	// // serialize the list to JSON
-	// if err := db.ToJSON(lh, w); err != nil {
-	// 	http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
-	// }
+	// serialize the list to JSON
+	if err := db.ToJSON(lh, w); err != nil {
+		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
+	}
 }
 
 // addHotel adds a hotel to the date store
 func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	h.l.Println("Handle POST")
 
-	// hotel := &models.Hotel{}
+	var hotel models.Hotel
 
-	// // deserialize the struct from JSON
-	// if err := db.FromJSON(hotel, r.Body); err != nil {
-	// 	http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
-	// }
+	// deserialize the struct from JSON
+	if err := db.FromJSON(&hotel, r.Body); err != nil {
+		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
+	}
 
-	// // add a hotel to the data store
-	// hotels_data.CreateHotel(hotel.db)
+	// add a hotel to the data store
+	hotels_data_creates.CreateHotel(h.db, hotel)
 }
