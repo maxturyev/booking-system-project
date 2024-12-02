@@ -33,6 +33,8 @@ func NewHotelConnection() (*gorm.DB, error) {
 	if err != nil {
 		return db, err
 	}
+
+	// Migrates models to the database as tables
 	db.AutoMigrate(&models.Booking{}, &models.Client{}, &models.Hotel{}, &models.Hotelier{})
 
 	return db, nil

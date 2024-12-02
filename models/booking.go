@@ -1,6 +1,6 @@
 package models
 
-// Booking defines the structure for an booking API
+// Booking defines the structure for a booking API
 type Booking struct {
 	ID           int    `gorm:"primaryKey" json:"id"`
 	ClientID     int    `json:"client_id"`

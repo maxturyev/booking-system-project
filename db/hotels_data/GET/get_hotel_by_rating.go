@@ -5,17 +5,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetHotelByRating(db *gorm.DB, left, right int) []models.Hotel {
-	if left == 0 {
-		left = 0
-	}
-	if right == 0 {
-		right = 5
-	}
+func GetHotelByRating(db *gorm.DB, stars ...int) []models.Hotel {
 	var hotels []models.Hotel
-	result := db.Where("rating >= ? AND rating <= right", left, right).Find(hotels)
+
+	result := db.Where("rating IN ?", stars).Find(hotels)
 	if result.Error != nil {
 		panic("Error")
 	}
+
 	return hotels
 }
