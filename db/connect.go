@@ -12,7 +12,7 @@ import (
 
 var dbase *gorm.DB
 
-// Initialize a database
+// Initialize databases
 // Creating tables from models
 func Init() *gorm.DB {
 	hotel_db, err := NewHotelConnection()
