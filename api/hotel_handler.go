@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/maxturyev/booking-system-project/db"
 	hotels_data_creates "github.com/maxturyev/booking-system-project/db/hotels_data/CREATE"
 	hotels_data_gets "github.com/maxturyev/booking-system-project/db/hotels_data/GET"
 	"github.com/maxturyev/booking-system-project/models"
@@ -45,7 +44,7 @@ func (h *Hotels) getHotels(w http.ResponseWriter) {
 	lh := hotels_data_gets.GetHotels(h.db)
 
 	// serialize the list to JSON
-	if err := db.ToJSON(lh, w); err != nil {
+	if err := ToJSON(lh, w); err != nil {
 		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
 	}
 }
@@ -57,7 +56,7 @@ func (h *Hotels) addHotel(w http.ResponseWriter, r *http.Request) {
 	var hotel models.Hotel
 
 	// deserialize the struct from JSON
-	if err := db.FromJSON(&hotel, r.Body); err != nil {
+	if err := FromJSON(&hotel, r.Body); err != nil {
 		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
 	}
 

@@ -19,6 +19,7 @@ func Init() *gorm.DB {
 	if err != nil {
 		panic("ERROR")
 	}
+
 	// NewBookingConnection()
 
 	return hotel_db

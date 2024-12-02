@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// CreateHotel adds a new hotel to the data store
+// CreateHotel adds a new hotel to the database
 func CreateHotel(db *gorm.DB, hotel models.Hotel) {
 	db.Create(&hotel)
 }
