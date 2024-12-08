@@ -3,7 +3,6 @@ module github.com/maxturyev/booking-system-project
 go 1.23.2
 
 require (
-	github.com/lib/pq v1.10.9
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
 )

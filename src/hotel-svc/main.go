@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/maxturyev/booking-system-project/src/hotel-svc/common"
-	"github.com/maxturyev/booking-system-project/src/hotel-svc/databases"
-	"github.com/maxturyev/booking-system-project/src/hotel-svc/handlers"
+	"github.com/maxturyev/booking-system-project/common"
+	"github.com/maxturyev/booking-system-project/databases"
+	"github.com/maxturyev/booking-system-project/handlers"
 )
 
 func main() {
