@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/maxturyev/booking-system-project/hotel-svc/common"
-	"github.com/maxturyev/booking-system-project/hotel-svc/databases"
-	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
+	"github.com/maxturyev/booking-system-project/booking-svc/common"
+	"github.com/maxturyev/booking-system-project/booking-svc/databases"
+	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
 
 	// Connect to database
-	hotel_db, err := databases.Init()
+	bookingDb, err := databases.Init()
 	if err != nil {
 		panic(err)
 	}
@@ -39,10 +39,10 @@ func main() {
 	router := http.NewServeMux()
 
 	// Create handlers
-	hh := handlers.NewHotels(l, hotel_db)
+	hh := handlers.NewBookings(l, bookingDb)
 	//	ch := api.NewClient(l)
 
-	router.Handle("/hotel/", hh)
+	router.Handle("/booking/", hh)
 	//	router.Handle("/client/", ch)
 
 	// Set up a channel to listen to for interrupt signals

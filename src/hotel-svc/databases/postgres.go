@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/maxturyev/booking-system-project/models"
+	"github.com/maxturyev/booking-system-project/hotel-svc/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
