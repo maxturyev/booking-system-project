@@ -13,14 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	host     = "localhost"
-	port     = "5432"
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "'Booking Data'"
-)
-
 // Establish a connection to booking database
 func Init() (*gorm.DB, error) {
 	err := godotenv.Load()
@@ -29,8 +21,8 @@ func Init() (*gorm.DB, error) {
 	}
 
 	// Initialize connection to Booking database
-	// dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, port, user, password, dbname)
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("Host"), os.Getenv("Port"), os.Getenv("User"), os.Getenv("Password"), os.Getenv("BookingDB"))
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("Host"),
+		os.Getenv("Port"), os.Getenv("User"), os.Getenv("Password"), os.Getenv("BookingDB"))
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -111,6 +103,5 @@ func DeleteBookingByID(db *gorm.DB, id int) bool {
 // creating bookings
 // function can use only client
 func CreateBooking(db *gorm.DB, booking models.Booking) {
-
 	db.Create(&booking)
 }

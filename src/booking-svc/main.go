@@ -27,7 +27,8 @@ func main() {
 	}
 
 	// Create logger
-	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
+	bl := log.New(os.Stdout, "booking-svc", log.LstdFlags)
+	cl := log.New(os.Stdout, "booking-svc", log.LstdFlags)
 
 	// Connect to database
 	bookingDb, err := databases.Init()
@@ -39,11 +40,11 @@ func main() {
 	router := http.NewServeMux()
 
 	// Create handlers
-	hh := handlers.NewBookings(l, bookingDb)
-	//	ch := api.NewClient(l)
+	bh := handlers.NewBookings(bl, bookingDb)
+	ch := handlers.NewClients(cl, bookingDb)
 
-	router.Handle("/booking/", hh)
-	//	router.Handle("/client/", ch)
+	router.Handle("/booking/", bh)
+	router.Handle("/client/", ch)
 
 	// Set up a channel to listen to for interrupt signals
 	var runChan = make(chan os.Signal, 1)

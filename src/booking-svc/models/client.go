@@ -13,3 +13,6 @@ type Client struct {
 	Password  string    `json:"password"`
 	Bookings  []Booking `gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"bookings"`
 }
+
+// Clients is a collection of client
+type Clients []*Client

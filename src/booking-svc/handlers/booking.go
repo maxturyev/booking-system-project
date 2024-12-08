@@ -24,32 +24,32 @@ func NewBookings(l *log.Logger, db *gorm.DB) *Bookings {
 }
 
 // ServeHTTP is the main entry point for the handler and satisfies the http.Handler interface
-func (h *Bookings) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *Bookings) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// handle the request to get a list of hotels
 	if r.Method == http.MethodGet {
-		h.getBookings(w)
+		c.getBookings(w)
 		return
 	}
 	// handle the request to add a hotel
 	if r.Method == http.MethodPost {
-		h.addBooking(w, r)
+		c.addBooking(w, r)
 		return
 	}
 	if r.Method == http.MethodPut {
-		h.UpdateBookingStatus(w, r)
+		c.UpdateBookingStatus(w, r)
 	}
 	if r.Method == http.MethodPost {
-		h.handleUploadImage(w, r)
+		c.handleUploadImage(w, r)
 		return
 	}
 }
 
 // getBookings returns the hotels from the date store
-func (h *Bookings) getBookings(w http.ResponseWriter) {
-	h.l.Println("Handle GET")
+func (c *Bookings) getBookings(w http.ResponseWriter) {
+	c.l.Println("Handle GET")
 
 	// fetch the hotels from the datastore
-	lh := databases.GetBookings(h.db)
+	lh := databases.GetBookings(c.db)
 
 	// serialize the list to JSON
 	if err := ToJSON(lh, w); err != nil {
@@ -58,8 +58,8 @@ func (h *Bookings) getBookings(w http.ResponseWriter) {
 }
 
 // methon which can changing any rows in database
-func (h *Bookings) UpdateBookingStatus(w http.ResponseWriter, r *http.Request) {
-	h.l.Println("Handle PUT")
+func (c *Bookings) UpdateBookingStatus(w http.ResponseWriter, r *http.Request) {
+	c.l.Println("Handle PUT")
 
 	var booking models.Booking
 
@@ -69,15 +69,15 @@ func (h *Bookings) UpdateBookingStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//checking a correctly seriliazation of format json to our models
-	h.l.Println(booking)
-	if err := databases.UpdateBooking(h.db, booking); err != nil {
-		h.l.Println(err)
+	c.l.Println(booking)
+	if err := databases.UpdateBooking(c.db, booking); err != nil {
+		c.l.Println(err)
 	}
 }
 
 // addBooking adds a hotel to the date store
-func (h *Bookings) addBooking(w http.ResponseWriter, r *http.Request) {
-	h.l.Println("Handle POST")
+func (c *Bookings) addBooking(w http.ResponseWriter, r *http.Request) {
+	c.l.Println("Handle POST")
 
 	var hotel models.Booking
 
@@ -87,11 +87,11 @@ func (h *Bookings) addBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	databases.CreateBooking(h.db, hotel)
+	databases.CreateBooking(c.db, hotel)
 }
 
 // POST upload image
-func (h *Bookings) handleUploadImage(w http.ResponseWriter, r *http.Request) {
+func (c *Bookings) handleUploadImage(w http.ResponseWriter, r *http.Request) {
 	//Max file size 10MB
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 	if err := r.ParseMultipartForm(5 << 10); err != nil {
