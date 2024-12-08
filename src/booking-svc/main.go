@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
+	"github.com/maxturyev/booking-system-project/booking-svc/common"
 	"log"
 	"net/http"
 	"os"
@@ -9,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/common"
 	"github.com/maxturyev/booking-system-project/booking-svc/databases"
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
 )
@@ -27,24 +28,33 @@ func main() {
 	}
 
 	// Create logger
-	bl := log.New(os.Stdout, "booking-svc", log.LstdFlags)
-	cl := log.New(os.Stdout, "booking-svc", log.LstdFlags)
+	l := log.New(os.Stdout, "booking-svc", log.LstdFlags)
 
 	// Connect to database
-	bookingDb, err := databases.Init()
+	db, err := databases.Init()
 	if err != nil {
 		panic(err)
 	}
 
-	// Create router and define routes and return that router
-	router := http.NewServeMux()
+	router := gin.Default()
 
-	// Create handlers
-	bh := handlers.NewBookings(bl, bookingDb)
-	ch := handlers.NewClients(cl, bookingDb)
+	bh := handlers.NewBookings(l, db)
+	ch := handlers.NewClients(l, db)
 
-	router.Handle("/booking/", bh)
-	router.Handle("/client/", ch)
+	bookingGroup := router.Group("/booking")
+	{
+		client := bookingGroup.Group("/client")
+		{
+			client.GET("/", bh.ListBookings)
+			client.POST("/", bh.CreateBooking)
+			client.PUT("/", bh.UpdateBooking)
+		}
+
+		bookingGroup.GET("/", ch.ListClients)
+		bookingGroup.POST("/", ch.AddClient)
+		bookingGroup.PUT("/", ch.UpdateClient)
+
+	}
 
 	// Set up a channel to listen to for interrupt signals
 	var runChan = make(chan os.Signal, 1)
@@ -61,6 +71,7 @@ func main() {
 	server := &http.Server{
 		Addr:         cfg.Server.Host + ":" + cfg.Server.Port,
 		Handler:      router,
+		ErrorLog:     l,
 		ReadTimeout:  cfg.Server.Timeout.Read * time.Second,
 		WriteTimeout: cfg.Server.Timeout.Write * time.Second,
 		IdleTimeout:  cfg.Server.Timeout.Idle * time.Second,

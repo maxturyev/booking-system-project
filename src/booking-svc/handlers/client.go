@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 
@@ -17,71 +18,46 @@ type Clients struct {
 }
 
 // NewClients creates a clients handler with the given logger
-func NewClients(l *log.Logger, db *gorm.DB) *Bookings {
-	return &Bookings{l, db}
+func NewClients(l *log.Logger, db *gorm.DB) *Clients {
+	return &Clients{l, db}
 }
 
-// ServeHTTP is the main entry point for the handler and satisfies the http.Handler interface
-func (c *Clients) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// handle the request to get a list of hotels
-	if r.Method == http.MethodGet {
-		c.getClients(w)
-		return
-	}
-
-	// handle the request to add a hotel
-	if r.Method == http.MethodPost {
-		c.addClient(w, r)
-		return
-	}
-	// handle the request to update client info
-	if r.Method == http.MethodPut {
-		c.updateClient(w, r)
-	}
-}
-
-// getBookings returns the hotels from the date store
-func (c *Clients) getClients(w http.ResponseWriter) {
+// ListClients handles GET request to list clients
+func (c *Clients) ListClients(ctx *gin.Context) {
 	c.l.Println("Handle GET clients")
 
 	// fetch the hotels from the datastore
 	lh := databases.GetClients(c.db)
 
 	// serialize the list to JSON
-	if err := ToJSON(lh, w); err != nil {
-		http.Error(w, "Unable to marshal JSON", http.StatusInternalServerError)
-	}
+	ctx.JSON(http.StatusOK, lh)
 }
 
-// UpdateClient changes client info
-func (c *Clients) updateClient(w http.ResponseWriter, r *http.Request) {
+// UpdateClient handles PUT request to update a client
+func (c *Clients) UpdateClient(ctx *gin.Context) {
 	c.l.Println("Handle PUT client")
 
-	var booking models.Booking
+	var client models.Client
 
-	if err := FromJSON(&booking, r.Body); err != nil {
-		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
-		return
-	}
+	ctx.JSON(http.StatusOK, &client)
 
 	// checking serialization
-	c.l.Println(booking)
+	c.l.Println(client)
 
-	if err := databases.UpdateBooking(c.db, booking); err != nil {
+	if err := databases.UpdateClient(c.db, client); err != nil {
 		c.l.Println(err)
 	}
 }
 
-// addClient adds a client to the database
-func (c *Clients) addClient(w http.ResponseWriter, r *http.Request) {
+// AddClient handles POST request to add a client
+func (c *Clients) AddClient(ctx *gin.Context) {
 	c.l.Println("Handle POST client")
 
 	var client models.Client
 
 	// deserialize the struct from JSON
-	if err := FromJSON(&client, r.Body); err != nil {
-		http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
-		return
+	if err := ctx.ShouldBindJSON(&client); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	databases.AddClient(c.db, client)

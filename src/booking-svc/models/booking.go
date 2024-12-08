@@ -13,3 +13,6 @@ type Booking struct {
 	Price     int       `json:"price"`
 	Status    string    `json:"status"`
 }
+
+// Bookings is a collection of client
+type Bookings []*Booking

@@ -7,7 +7,7 @@ type Client struct {
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
 	Email     string    `gorm:"uniqueIndex" json:"email"`
-	Country   string    `gorm:"uniqueIndex" json:"country"`
+	Country   string    `json:"country"`
 	Phone     string    `gorm:"uniqueIndex" json:"phone"`
 	Login     string    `gorm:"uniqueIndex" json:"login"`
 	Password  string    `json:"password"`
