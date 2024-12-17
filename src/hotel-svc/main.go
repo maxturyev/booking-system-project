@@ -6,13 +6,29 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/hotel-svc/common"
 	"github.com/maxturyev/booking-system-project/hotel-svc/databases"
 	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
 )
+
+func validateNumericID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		match, _ := regexp.MatchString(`^\d+$`, id)
+		if !match {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
 
 func main() {
 	// Generate our config based on the config supplied
@@ -36,13 +52,19 @@ func main() {
 	}
 
 	// Create router and define routes and return that router
-	router := http.NewServeMux()
+	router := gin.Default()
 
 	// Create handlers
 	hh := handlers.NewHotels(l, hotel_db)
 	//	ch := api.NewClient(l)
 
-	router.Handle("/hotel/", hh)
+	hotelGroup := router.Group("/hotel")
+	{
+		hotelGroup.GET("/", hh.GetHotels)
+		hotelGroup.POST("/", hh.AddHotel)
+		hotelGroup.POST("/:id", validateNumericID(), hh.GetHotelByID)
+
+	}
 	//	router.Handle("/client/", ch)
 
 	// Set up a channel to listen to for interrupt signals
