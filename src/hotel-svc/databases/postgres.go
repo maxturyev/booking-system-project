@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/maxturyev/booking-system-project/models"
+	"github.com/maxturyev/booking-system-project/hotel-svc/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -42,7 +42,7 @@ func Init() (*gorm.DB, error) {
 
 // Migration model(struct) to database(Postgres)
 func migrateDB(db *gorm.DB) {
-	err := db.AutoMigrate(&models.Hotelier{}, &models.Hotel{}, &models.RoomCategory{})
+	err := db.AutoMigrate(&models.Hotelier{}, &models.Hotel{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
@@ -52,13 +52,6 @@ func migrateDB(db *gorm.DB) {
 
 // this function need for a creating foreing key in database because GORM can not automigration with slices
 func createConstraints(db *gorm.DB) {
-	if err := db.Migrator().CreateConstraint(&models.RoomCategory{}, "Hotel"); err != nil {
-		log.Printf("Failed to create constraint: %v", err)
-	}
-	if err := db.Migrator().CreateConstraint(&models.RoomCategory{}, "fk_room_categories_hotels"); err != nil {
-		log.Printf("Failed to create constraint: %v", err)
-	}
-
 	if err := db.Migrator().CreateConstraint(&models.Hotel{}, "Hotelier"); err != nil {
 		log.Printf("Failed to create constraint: %v", err)
 	}
@@ -84,34 +77,13 @@ func UpdateHotel(db *gorm.DB, hotel models.Hotel) error {
 	return nil
 }
 
-// add a room category with a url: localhost:9090/hotels/{hotel-id}/room-categories POST
-// can have a permission a hotelier for this function
-// in the future will be reliazed with jwt token  09.12.2024
-// now everyone can use this function 08.12.2024
-func AddRoomCategoryInHotel(db *gorm.DB, HotelID uint, RoomCategory models.RoomCategory) error {
-	var hotel models.Hotel
-	if err := db.First(&hotel, HotelID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("hotel not found")
-		}
-		return err
+func GetHoteliers(db *gorm.DB) []models.Hotelier {
+	var hotelier []models.Hotelier
+	result := db.Find(&hotelier)
+	if result.Error != nil {
+		panic("Error")
 	}
-	RoomCategory.HotelID = HotelID
-	db.Create(&RoomCategory)
-	return nil
-}
-
-func DeleteRoomCategoryInHotel(db *gorm.DB, HotelID uint, RoomCategory models.RoomCategory) error {
-	var hotel models.Hotel
-	if err := db.First(&hotel, HotelID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("hotel not found")
-		}
-		return err
-	}
-	RoomCategory.HotelID = HotelID
-	db.Delete(&RoomCategory)
-	return nil
+	return hotelier
 }
 
 // function which work with hotel handler
@@ -175,4 +147,9 @@ func DeleteHotelByID(db *gorm.DB, id int) bool {
 // function can use only hotelier
 func CreateHotel(db *gorm.DB, hotel models.Hotel) {
 	db.Create(&hotel)
+}
+
+// when registration
+func CreateHotelier(db *gorm.DB, hotelier models.Hotelier) {
+	db.Create(&hotelier)
 }

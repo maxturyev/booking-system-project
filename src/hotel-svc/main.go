@@ -3,16 +3,36 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
 
-	"github.com/maxturyev/booking-system-project/common"
-	"github.com/maxturyev/booking-system-project/databases"
-	"github.com/maxturyev/booking-system-project/handlers"
+	"github.com/gin-gonic/gin"
+	"github.com/maxturyev/booking-system-project/hotel-svc/common"
+	"github.com/maxturyev/booking-system-project/hotel-svc/databases"
+	grpcserver "github.com/maxturyev/booking-system-project/hotel-svc/grpc-server"
+	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
+	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"google.golang.org/grpc"
 )
+
+func validateNumericID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		match, _ := regexp.MatchString(`^\d+$`, id)
+		if !match {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
 
 func main() {
 	// Generate our config based on the config supplied
@@ -34,15 +54,37 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
+	go func() {
+		// Creating grpc-server
+		lis, err := net.Listen("tcp", ":50051")
+		if err != nil {
+			log.Fatal("Error")
+		}
+		grpcServer := grpc.NewServer()
+		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotel_db})
+		log.Println("Grpc started succesfully")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Ошибка запуска сервера: %v", err)
+		}
+	}()
 	// Create router and define routes and return that router
-	router := http.NewServeMux()
+	router := gin.Default()
 
 	// Create handlers
 	hh := handlers.NewHotels(l, hotel_db)
 	//	ch := api.NewClient(l)
-
-	router.Handle("/hotel/", hh)
+	hth := handlers.NewHotelier(l, hotel_db)
+	hotelGroup := router.Group("/hotel")
+	{
+		hotelGroup.GET("/", hh.GetHotels)
+		hotelGroup.POST("/", hh.AddHotel)
+		hotelGroup.POST("/:id", validateNumericID(), hh.GetHotelByID)
+	}
+	hotelierGroup := router.Group("/hotelier")
+	{
+		hotelierGroup.GET("/", hth.GetHoteliers)
+		hotelierGroup.POST("/", hth.AddHotel)
+	}
 	//	router.Handle("/client/", ch)
 
 	// Set up a channel to listen to for interrupt signals
