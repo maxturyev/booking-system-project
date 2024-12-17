@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package grpc;
+
+option go_package = "booking-system-project/src/grpc;grpc";
+
+message Hotel {
+    int32 hotelID = 1;
+    string name = 2;
+    int32 rating = 3;
+    string country = 4;
+    string description = 5;
+    int32 room_avaible = 6;
+    int32 price = 7;
+    string address = 8; 
+}
+
+message GetHotelsRequest {
+
+}
+
+message GetHotelsResponse {
+    Hotel hotel = 1;
+}
+
+message GetHotelByIDRequest {
+    int32 id = 1;
+}
+
+message GetHotelByIDResponse {
+    Hotel hotel = 1;
+}
+
+service HotelService {
+    rpc GetHotels (GetHotelsRequest) returns (stream GetHotelsResponse);
+    rpc GetHotelByID (GetHotelByIDRequest) returns (GetHotelByIDResponse);
+}
