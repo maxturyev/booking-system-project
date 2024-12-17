@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/booking-svc/databases"
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
 	"gorm.io/gorm"
-	"log"
-	"net/http"
 )
 
 // Bookings is a http.Handler

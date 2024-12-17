@@ -7,7 +7,7 @@ type Hotel struct {
 	Country        string `json:"country"`
 	Description    string `json:"description"`
 	RoomsAvailable int    `json:"rooms_available"`
-	Price          string `json:"price"`
+	Price          int    `json:"price"`
 	Address        string `gorm:"uniqueIndex" json:"address"`
 	HotelierID     uint   `json:"hotelier_id"`
 }

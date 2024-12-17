@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/booking-svc/common"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/maxturyev/booking-system-project/booking-svc/common"
+	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"google.golang.org/grpc"
 
 	"github.com/maxturyev/booking-system-project/booking-svc/databases"
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
@@ -35,6 +39,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	//grpc client server connection
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatal("error: can not connection")
+	}
+	defer conn.Close()
+	clientgrpc := pb.NewHotelServiceClient(conn)
 
 	router := gin.Default()
 
@@ -49,7 +60,60 @@ func main() {
 			client.POST("/", bh.CreateBooking)
 			client.PUT("/", bh.UpdateBooking)
 		}
+		bookingGroup.GET("/hotels", func(ctx *gin.Context) {
+			ctxgrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			log.Println("in grpc")
+			stream, err := clientgrpc.GetHotels(ctxgrpc, &pb.GetHotelsRequest{})
+			if err != nil {
+				log.Fatal("error")
+			}
+			var hotelList []struct {
+				HotelID        uint   `json:"hotel_id"`
+				Name           string `json:"name"`
+				Rating         int    `json:"rating"`
+				Country        string `json:"country"`
+				Description    string `json:"description"`
+				RoomsAvailable int    `json:"rooms_available"`
+				Price          int    `json:"price"`
+				Address        string `json:"address"`
+			}
+			for {
+				res, err := stream.Recv()
+				if err == io.EOF {
+					log.Print("Ended")
+					break
+				}
+				if err != nil {
+					log.Print("error")
+					ctx.JSON(500, gin.H{"error": "Error from getting information"})
+					return
+				}
+				hotelList = append(hotelList, struct {
+					HotelID        uint   `json:"hotel_id"`
+					Name           string `json:"name"`
+					Rating         int    `json:"rating"`
+					Country        string `json:"country"`
+					Description    string `json:"description"`
+					RoomsAvailable int    `json:"rooms_available"`
+					Price          int    `json:"price"`
+					Address        string `json:"address"`
+				}{
+					HotelID:        uint(res.Hotel.HotelID),
+					Name:           res.Hotel.Name,
+					Rating:         int(res.Hotel.Rating),
+					Country:        res.Hotel.Country,
+					Description:    res.Hotel.Description,
+					RoomsAvailable: int(res.Hotel.RoomAvaible),
+					Price:          int(res.Hotel.Price),
+					Address:        res.Hotel.Address,
+				})
+			}
 
+			ctx.JSON(200, gin.H{
+				"hotels": hotelList,
+			})
+		})
 		bookingGroup.GET("/", ch.ListClients)
 		bookingGroup.POST("/", ch.AddClient)
 		bookingGroup.PUT("/", ch.UpdateClient)

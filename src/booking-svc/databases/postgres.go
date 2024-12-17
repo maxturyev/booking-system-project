@@ -4,24 +4,30 @@ package databases
 import (
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+const (
+	Host      = "localhost"
+	Port      = "5433"
+	User      = "postgres"
+	Password  = "Alan2805"
+	DBBooking = "booking_data"
+	DBHotel   = "postgres"
+)
+
 // Establish a connection to booking database
 func Init() (*gorm.DB, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	// Initialize connection to Booking database
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("Host"),
-		os.Getenv("Port"), os.Getenv("User"), os.Getenv("Password"), os.Getenv("BookingDB"))
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", Host, Port, User, Password, DBBooking)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

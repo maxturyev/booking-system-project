@@ -77,6 +77,15 @@ func UpdateHotel(db *gorm.DB, hotel models.Hotel) error {
 	return nil
 }
 
+func GetHoteliers(db *gorm.DB) []models.Hotelier {
+	var hotelier []models.Hotelier
+	result := db.Find(&hotelier)
+	if result.Error != nil {
+		panic("Error")
+	}
+	return hotelier
+}
+
 // function which work with hotel handler
 // get all hotels in system
 func GetHotels(db *gorm.DB) []models.Hotel {
@@ -138,4 +147,9 @@ func DeleteHotelByID(db *gorm.DB, id int) bool {
 // function can use only hotelier
 func CreateHotel(db *gorm.DB, hotel models.Hotel) {
 	db.Create(&hotel)
+}
+
+// when registration
+func CreateHotelier(db *gorm.DB, hotelier models.Hotelier) {
+	db.Create(&hotelier)
 }
