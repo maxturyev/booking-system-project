@@ -8,9 +8,7 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
-require(
-	github.com/maxturyev/booking-system-project/src/grpc v0.0.0
-)
+require github.com/maxturyev/booking-system-project/src/grpc v0.0.0
 
 replace github.com/maxturyev/booking-system-project/src/grpc => ../grpc
 
