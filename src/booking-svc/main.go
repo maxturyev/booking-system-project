@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
+
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/booking-svc/common"
@@ -19,6 +21,20 @@ import (
 	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
 )
+
+func validateNumericID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		match, _ := regexp.MatchString(`^\d+$`, id)
+		if !match {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
 
 func main() {
 	// Generate http server config
@@ -31,7 +47,7 @@ func main() {
 	bookingDb := db.ConnectDB()
 
 	// Grpc client server connection
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Println(err)
 	}
@@ -43,9 +59,7 @@ func main() {
 	}(conn)
 
 	grpcClient := pb.NewHotelServiceClient(conn)
-
 	router := gin.Default()
-
 	bh := handlers.NewBookings(l, bookingDb)
 	ch := handlers.NewClients(l, bookingDb)
 
@@ -53,7 +67,8 @@ func main() {
 	bookingGroup := router.Group("/booking")
 	{
 		// Handler to get room price of a hotel by ID
-		bookingGroup.GET("/hotel", bh.GetHotelPrice(grpcClient))
+		bookingGroup.GET("/hotel", bh.GetHotels(grpcClient))
+		bookingGroup.GET("/hotel/:id", validateNumericID(), bh.GetHotelPriceByID(grpcClient))
 		bookingGroup.GET("/", bh.GetBookings)
 		bookingGroup.POST("/", bh.PostBooking)
 		bookingGroup.PUT("/", bh.PutBooking)

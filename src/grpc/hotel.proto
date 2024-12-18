@@ -11,7 +11,7 @@ message Hotel {
     string country = 4;
     string description = 5;
     int32 room_available = 6;
-    int32 room_price = 7;
+    float room_price = 7;
     string address = 8; 
 }
 
@@ -23,15 +23,15 @@ message GetHotelsResponse {
     Hotel hotel = 1;
 }
 
-message GetHotelByIDRequest {
+message GetHotelPriceByIDRequest {
     int32 id = 1;
 }
 
-message GetHotelByIDResponse {
-    Hotel hotel = 1;
+message GetHotelPriceByIDResponse {
+    float room_price= 1;
 }
 
 service HotelService {
     rpc GetHotels (GetHotelsRequest) returns (stream GetHotelsResponse);
-    rpc GetHotelByID (GetHotelByIDRequest) returns (GetHotelByIDResponse);
+    rpc GetHotelPriceByID (GetHotelPriceByIDRequest) returns (GetHotelPriceByIDResponse);
 }
