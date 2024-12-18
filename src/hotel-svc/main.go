@@ -49,8 +49,9 @@ func main() {
 		// Creating grpc-server
 		lis, err := net.Listen("tcp", ":50051")
 		if err != nil {
-			log.Fatal("Error")
+			log.Fatalf("Error starting server: %v", err)
 		}
+
 		grpcServer := grpc.NewServer()
 		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
 		log.Println("Grpc server started successfully")

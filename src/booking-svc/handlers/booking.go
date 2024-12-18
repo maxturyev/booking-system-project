@@ -92,11 +92,11 @@ func (c *Bookings) GetHotels(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
 		ctxgrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		log.Println("Grpc connection established")
+		log.Println("Handle GRPC request to get hotel room price")
 
 		stream, err := grpcClient.GetHotels(ctxgrpc, &pb.GetHotelsRequest{})
 		if err != nil {
-			log.Fatal("error1")
+			log.Fatalf("Error setting up a stream %v", err)
 		}
 
 		var hotelList []struct {

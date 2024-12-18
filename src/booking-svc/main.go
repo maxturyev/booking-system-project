@@ -47,14 +47,14 @@ func main() {
 	bookingDb := db.ConnectDB()
 
 	// Grpc client server connection
-	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Println(err)
 	}
 	defer func(conn *grpc.ClientConn) {
 		err := conn.Close()
 		if err != nil {
-
+			log.Fatalf("could not close the connection %v", err)
 		}
 	}(conn)
 
