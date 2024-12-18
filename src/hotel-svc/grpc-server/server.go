@@ -1,6 +1,7 @@
 package grpcserver
 
 import (
+	"context"
 	"log"
 
 	"github.com/maxturyev/booking-system-project/hotel-svc/db"
@@ -23,14 +24,14 @@ func (s *HotelServer) GetHotels(req *pb.GetHotelsRequest, stream pb.HotelService
 	for _, hotel := range hotels {
 		response := &pb.GetHotelsResponse{
 			Hotel: &pb.Hotel{
-				HotelID:     int32(hotel.HotelID),
-				Name:        hotel.Name,
-				Rating:      int32(hotel.Rating),
-				Country:     hotel.Country,
-				Description: hotel.Description,
-				RoomAvaible: int32(hotel.RoomsAvailable),
-				Price:       int32(hotel.Price),
-				Address:     hotel.Address,
+				HotelID:       int32(hotel.HotelID),
+				Name:          hotel.Name,
+				Rating:        int32(hotel.Rating),
+				Country:       hotel.Country,
+				Description:   hotel.Description,
+				RoomAvailable: int32(hotel.RoomsAvailable),
+				RoomPrice:     float32(hotel.RoomPrice),
+				Address:       hotel.Address,
 			},
 		}
 		if err := stream.Send(response); err != nil {
@@ -39,4 +40,12 @@ func (s *HotelServer) GetHotels(req *pb.GetHotelsRequest, stream pb.HotelService
 		}
 	}
 	return nil
+}
+
+func (s *HotelServer) GetHotelPriceByID(ctx context.Context, req *pb.GetHotelPriceByIDRequest) (*pb.GetHotelPriceByIDResponse, error) {
+	log.Println("Get ID")
+	hotelID := req.GetId()
+	hotel := db.SelectHotelByID(s.DB, int(hotelID))
+	response := &pb.GetHotelPriceByIDResponse{RoomPrice: hotel.RoomPrice}
+	return response, nil
 }
