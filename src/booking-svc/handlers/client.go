@@ -8,7 +8,7 @@ import (
 
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/databases"
+	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"gorm.io/gorm"
 )
 
@@ -18,17 +18,17 @@ type Clients struct {
 	db *gorm.DB
 }
 
-// NewClients creates a clients handler with the given logger
+// NewClients creates a clients handler
 func NewClients(l *log.Logger, db *gorm.DB) *Clients {
 	return &Clients{l, db}
 }
 
-// ListClients handles GET request to list clients
-func (c *Clients) ListClients(ctx *gin.Context) {
+// GetClients handles GET request to list all clients
+func (c *Clients) GetClients(ctx *gin.Context) {
 	c.l.Println("Handle GET clients")
 
-	// fetch the hotels from the datastore
-	lh := databases.GetClients(c.db)
+	// fetch the hotels from the database
+	lh := db.SelectClients(c.db)
 
 	// serialize the list to JSON
 	ctx.JSON(http.StatusOK, lh)
@@ -40,18 +40,18 @@ func (c *Clients) UpdateClient(ctx *gin.Context) {
 
 	var client models.Client
 
-	ctx.JSON(http.StatusOK, &client)
+	// deserialize the struct from JSON
+	if err := ctx.ShouldBindJSON(&client); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 
-	// checking serialization
-	c.l.Println(client)
-
-	if err := databases.UpdateClient(c.db, client); err != nil {
+	if err := db.UpdateClient(c.db, client); err != nil {
 		c.l.Println(err)
 	}
 }
 
-// AddClient handles POST request to add a client
-func (c *Clients) AddClient(ctx *gin.Context) {
+// PostClient handles POST request to create a client
+func (c *Clients) PostClient(ctx *gin.Context) {
 	c.l.Println("Handle POST client")
 
 	var client models.Client
@@ -61,5 +61,5 @@ func (c *Clients) AddClient(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	databases.AddClient(c.db, client)
+	db.CreateClient(c.db, client)
 }

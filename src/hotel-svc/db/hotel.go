@@ -7,16 +7,28 @@ import (
 	"log"
 )
 
-// CreateHotel adds a hotel to the database
+// CreateHotel creates a hotel to the database
 func CreateHotel(db *gorm.DB, hotel models.Hotel) {
 	db.Create(&hotel)
 }
 
-// UpdateHotel updates hotel info
+// SelectHotels returns all hotels from the database
+func SelectHotels(db *gorm.DB) []models.Hotel {
+	var hotel []models.Hotel
+
+	result := db.Find(&hotel)
+	if result.Error != nil {
+		panic("Error")
+	}
+
+	return hotel
+}
+
+// UpdateHotel updates hotel info in the database
 func UpdateHotel(db *gorm.DB, hotel models.Hotel) error {
 	var existing models.Hotel
+
 	result := db.First(&existing, hotel.HotelID)
-	// Check error
 	if result.Error != nil {
 		return result.Error
 	}
@@ -25,26 +37,19 @@ func UpdateHotel(db *gorm.DB, hotel models.Hotel) error {
 	if result.Error != nil {
 		return result.Error
 	}
+
 	return nil
 }
 
-// GetHotels fetches hotels from the database
-func GetHotels(db *gorm.DB) []models.Hotel {
-	var hotel []models.Hotel
-	result := db.Find(&hotel)
-	if result.Error != nil {
-		panic("Error")
-	}
-	return hotel
-}
-
-// GetHotelByID fetches hotels from the database by ID
-func GetHotelByID(db *gorm.DB, id int) models.Hotel {
+// SelectHotelByID returns a hotel from the database by ID
+func SelectHotelByID(db *gorm.DB, id int) models.Hotel {
 	var hotel models.Hotel
+
 	result := db.First(&hotel, id)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		log.Println("Запись не найдена")
 	}
+
 	return hotel
 }
 

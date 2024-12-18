@@ -1,4 +1,4 @@
-package databases
+package db
 
 import (
 	"errors"
@@ -7,12 +7,28 @@ import (
 	"log"
 )
 
-// Update hotel with need field
+// CreateBooking creates a booking in the database
+func CreateBooking(db *gorm.DB, booking models.Booking) {
+	db.Create(&booking)
+}
+
+// SelectBookings returns all bookings from the database
+func SelectBookings(db *gorm.DB) []models.Booking {
+	var booking []models.Booking
+
+	result := db.Find(&booking)
+	if result.Error != nil {
+		panic("Error")
+	}
+
+	return booking
+}
+
+// UpdateBooking updates booking info in the database
 func UpdateBooking(db *gorm.DB, booking models.Booking) error {
 	var existing models.Booking
-	result := db.First(&existing, booking.BookingID)
 
-	// Check error
+	result := db.First(&existing, booking.BookingID)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -23,17 +39,6 @@ func UpdateBooking(db *gorm.DB, booking models.Booking) error {
 	}
 
 	return nil
-}
-
-// function which work with booking handler
-// get all bookings in system
-func GetBookings(db *gorm.DB) []models.Booking {
-	var booking []models.Booking
-	result := db.Find(&booking)
-	if result.Error != nil {
-		panic("Error")
-	}
-	return booking
 }
 
 // function which work with booking handler
@@ -53,10 +58,4 @@ func DeleteBookingByID(db *gorm.DB, id int) bool {
 		panic("Error")
 	}
 	return true
-}
-
-// creating bookings
-// function can use only client
-func CreateBooking(db *gorm.DB, booking models.Booking) {
-	db.Create(&booking)
 }

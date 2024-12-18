@@ -1,13 +1,16 @@
 package handlers
 
 import (
+	"context"
+	"github.com/gin-gonic/gin"
+	"github.com/maxturyev/booking-system-project/booking-svc/db"
+	"github.com/maxturyev/booking-system-project/booking-svc/models"
+	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"gorm.io/gorm"
+	"io"
 	"log"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/booking-svc/databases"
-	"github.com/maxturyev/booking-system-project/booking-svc/models"
-	"gorm.io/gorm"
+	"time"
 )
 
 // Bookings is a http.Handler
@@ -16,47 +19,109 @@ type Bookings struct {
 	db *gorm.DB
 }
 
-// NewHotels creates a products handler with the given logger
+// NewBookings creates a bookings handler
 func NewBookings(l *log.Logger, db *gorm.DB) *Bookings {
 	return &Bookings{l, db}
 }
 
-// ListBookings handles GET request to list bookings
-func (c *Bookings) ListBookings(ctx *gin.Context) {
+// GetBookings handles GET request to list all bookings
+func (c *Bookings) GetBookings(ctx *gin.Context) {
 	c.l.Println("Handle GET bookings")
 
 	// fetch the hotels from the database
-	lh := databases.GetBookings(c.db)
+	lh := db.SelectBookings(c.db)
 
 	// serialize the list to JSON
 	ctx.JSON(http.StatusOK, lh)
 }
 
-// UpdateBooking handles PUT request to update bookings
-func (c *Bookings) UpdateBooking(ctx *gin.Context) {
+// PutBooking handles PUT request to update a booking
+func (c *Bookings) PutBooking(ctx *gin.Context) {
 	c.l.Println("Handle PUT")
 
 	var booking models.Booking
 
 	// deserialize http request body
-	ctx.JSON(http.StatusOK, booking)
+	if err := ctx.ShouldBindJSON(&booking); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 
-	// check
-	c.l.Println(booking)
-
-	if err := databases.UpdateBooking(c.db, booking); err != nil {
+	if err := db.UpdateBooking(c.db, booking); err != nil {
 		c.l.Println(err)
 	}
 }
 
-// CreateBooking handles a POST request to create a booking
-func (c *Bookings) CreateBooking(ctx *gin.Context) {
+// PostBooking handles a POST request to create a booking
+func (c *Bookings) PostBooking(ctx *gin.Context) {
 	c.l.Println("Handle POST")
 
-	var hotel models.Booking
+	var booking models.Booking
 
 	// deserialize the struct from JSON
-	ctx.JSON(http.StatusOK, hotel)
+	if err := ctx.ShouldBindJSON(&booking); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 
-	databases.CreateBooking(c.db, hotel)
+	db.CreateBooking(c.db, booking)
+}
+
+func (c *Bookings) GetHotelPrice(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Context with the amount of time to process the grpc request
+		ctxgrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		log.Println("Grpc connection established")
+
+		stream, err := grpcClient.GetHotels(ctxgrpc, &pb.GetHotelsRequest{})
+		if err != nil {
+			log.Fatal("error")
+		}
+
+		var hotelList []struct {
+			HotelID        uint   `json:"hotel_id"`
+			Name           string `json:"name"`
+			Rating         int    `json:"rating"`
+			Country        string `json:"country"`
+			Description    string `json:"description"`
+			RoomsAvailable int    `json:"rooms_available"`
+			Price          int    `json:"price"`
+			Address        string `json:"address"`
+		}
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				log.Print("Grpc connection ended")
+				break
+			}
+			if err != nil {
+				log.Print("error")
+				ctx.JSON(500, gin.H{"error": "Error from getting information"})
+				return
+			}
+			hotelList = append(hotelList, struct {
+				HotelID        uint   `json:"hotel_id"`
+				Name           string `json:"name"`
+				Rating         int    `json:"rating"`
+				Country        string `json:"country"`
+				Description    string `json:"description"`
+				RoomsAvailable int    `json:"rooms_available"`
+				Price          int    `json:"price"`
+				Address        string `json:"address"`
+			}{
+				HotelID:        uint(res.Hotel.HotelID),
+				Name:           res.Hotel.Name,
+				Rating:         int(res.Hotel.Rating),
+				Country:        res.Hotel.Country,
+				Description:    res.Hotel.Description,
+				RoomsAvailable: int(res.Hotel.RoomAvaible),
+				Price:          int(res.Hotel.Price),
+				Address:        res.Hotel.Address,
+			})
+		}
+
+		ctx.JSON(200, gin.H{
+			"hotels": hotelList,
+		})
+	}
 }

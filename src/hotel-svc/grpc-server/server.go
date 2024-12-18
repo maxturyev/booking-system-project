@@ -19,7 +19,7 @@ type HotelServer struct {
 // GetHotels lists hotels from the database
 func (s *HotelServer) GetHotels(req *pb.GetHotelsRequest, stream pb.HotelService_GetHotelsServer) error {
 	log.Println("GetHotels запрос получен")
-	hotels := db.GetHotels(s.DB)
+	hotels := db.SelectHotels(s.DB)
 	for _, hotel := range hotels {
 		response := &pb.GetHotelsResponse{
 			Hotel: &pb.Hotel{

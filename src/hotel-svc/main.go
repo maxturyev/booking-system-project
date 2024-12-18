@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -63,21 +64,21 @@ func main() {
 
 	// Create handlers
 	hh := handlers.NewHotels(l, hotelDb)
-	hth := handlers.NewHotelier(l, hotelDb)
+	hth := handlers.NewHoteliers(l, hotelDb)
 
-	// Handle http requests for hotel
+	// Handle requests for hotel
 	hotelGroup := router.Group("/hotel")
 	{
 		hotelGroup.GET("/", hh.GetHotels)
 		hotelGroup.GET("/:id", validateNumericID(), hh.GetHotelByID)
-		hotelGroup.POST("/", hh.AddHotel)
+		hotelGroup.POST("/", hh.PostHotel)
 	}
 
-	// Handle http requests for hotelier
+	// Handle requests for hotelier
 	hotelierGroup := router.Group("/hotelier")
 	{
 		hotelierGroup.GET("/", hth.GetHoteliers)
-		hotelierGroup.POST("/", hth.AddHotel)
+		hotelierGroup.POST("/", hth.PostHotelier)
 	}
 
 	// Set up a channel to listen to for interrupt signals
@@ -109,7 +110,7 @@ func main() {
 	// Run the server on a new goroutine
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
+			if errors.Is(err, http.ErrServerClosed) {
 				// Normal interrupt operation, ignore
 			} else {
 				log.Fatalf("Server failed to start due to err: %v", err)

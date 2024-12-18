@@ -10,27 +10,38 @@ import (
 	"gorm.io/gorm"
 )
 
-type Hotelier struct {
+// Hoteliers is a http.Handler
+type Hoteliers struct {
 	l  *log.Logger
 	db *gorm.DB
 }
 
-func NewHotelier(l *log.Logger, db *gorm.DB) *Hotelier {
-	return &Hotelier{l, db}
+// NewHoteliers creates a hoteliers handler
+func NewHoteliers(l *log.Logger, db *gorm.DB) *Hoteliers {
+	return &Hoteliers{l, db}
 }
 
-func (h *Hotelier) GetHoteliers(ctx *gin.Context) {
-	h.l.Println("Handle GET")
-	lh := db.GetHoteliers(h.db)
+// GetHoteliers handles GET request to list all hoteliers
+func (h *Hoteliers) GetHoteliers(ctx *gin.Context) {
+	h.l.Println("Handle GET Hoteliers")
+
+	// fetch the hoteliers from the database
+	lh := db.SelectHoteliers(h.db)
+
+	// serialize the list to JSON
 	ctx.JSON(http.StatusOK, lh)
 }
 
-func (h *Hotelier) AddHotel(ctx *gin.Context) {
-	h.l.Println("Handle POST")
+// PostHotelier handles POST request to create a hotelier
+func (h *Hoteliers) PostHotelier(ctx *gin.Context) {
+	h.l.Println("Handle POST Hotelier")
+
 	var hotelier models.Hotelier
 
+	// deserialize the struct from JSON
 	if err := ctx.ShouldBind(&hotelier); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+
 	db.CreateHotelier(h.db, hotelier)
 }

@@ -1,4 +1,4 @@
-package databases
+package db
 
 import (
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
@@ -6,29 +6,29 @@ import (
 	"log"
 )
 
-// AddClient adds a client to the database
-func AddClient(db *gorm.DB, client models.Client) {
+// CreateClient creates a client to the database
+func CreateClient(db *gorm.DB, client models.Client) {
 	db.Create(&client)
 }
 
-// GetClients gets all clients in the database
-func GetClients(db *gorm.DB) models.Clients {
+// SelectClients returns all clients from the database
+func SelectClients(db *gorm.DB) models.Clients {
 	var clients models.Clients
+
 	result := db.Find(&clients)
 	if result.Error != nil {
 		panic("Error")
 	}
+
 	return clients
 }
 
-// Update hotel with need field
+// UpdateClient updates client info in the database
 func UpdateClient(db *gorm.DB, client models.Client) error {
 	log.Println("entered db update")
 	var existing models.Client
 
 	result := db.First(&existing, client.ClientID)
-
-	// Check error
 	if result.Error != nil {
 		return result.Error
 	}

@@ -17,32 +17,36 @@ type Hotels struct {
 	db *gorm.DB
 }
 
-// NewHotels creates a products handler with the given logger
+// NewHotels creates a hotels handler
 func NewHotels(l *log.Logger, db *gorm.DB) *Hotels {
 	return &Hotels{l, db}
 }
 
-// GetHotels returns the hotels from the database
+// GetHotels handles GET request to list all hotels
 func (h *Hotels) GetHotels(ctx *gin.Context) {
 	h.l.Println("Handle GET")
 
-	// fetch the hotels from the datastore
-	lh := db.GetHotels(h.db)
+	// fetch the hotels from the database
+	lh := db.SelectHotels(h.db)
 
+	// serialize the list to JSON
 	ctx.JSON(http.StatusOK, lh)
 }
 
-// GetHotelByID returns the hotels from the database by ID
+// GetHotelByID handles GET request to return a hotel by id
 func (h *Hotels) GetHotelByID(ctx *gin.Context) {
 	h.l.Println("Handle GET")
 	id, _ := strconv.Atoi(ctx.Param("id"))
-	lh := db.GetHotelByID(h.db, id)
 
-	ctx.JSON(http.StatusOK, lh)
+	// fetch the hotel from the database
+	hotel := db.SelectHotelByID(h.db, id)
+
+	// serialize the model to JSON
+	ctx.JSON(http.StatusOK, hotel)
 }
 
-// UpdateHotel updates hotel info
-func (h *Hotels) UpdateHotel(ctx *gin.Context) {
+// PutHotel handles PUT request to update a hotel
+func (h *Hotels) PutHotel(ctx *gin.Context) {
 	h.l.Println("Handle PUT")
 
 	var hotel models.Hotel
@@ -53,12 +57,13 @@ func (h *Hotels) UpdateHotel(ctx *gin.Context) {
 		return
 	}
 
-	err := db.UpdateHotel(h.db, hotel)
-	h.l.Println(err)
+	if err := db.UpdateHotel(h.db, hotel); err != nil {
+		h.l.Println(err)
+	}
 }
 
-// AddHotel adds a hotel to the database
-func (h *Hotels) AddHotel(ctx *gin.Context) {
+// PostHotel handles POST request to create a hotel
+func (h *Hotels) PostHotel(ctx *gin.Context) {
 	h.l.Println("Handle POST")
 
 	var hotel models.Hotel

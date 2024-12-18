@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"google.golang.org/grpc/credentials/insecure"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +16,7 @@ import (
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"google.golang.org/grpc"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/databases"
+	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
 )
 
@@ -29,9 +28,9 @@ func main() {
 	l := log.New(os.Stdout, "booking-svc", log.LstdFlags)
 
 	// Connect to database
-	db := databases.ConnectDB()
+	bookingDb := db.ConnectDB()
 
-	//grpc client server connection
+	// Grpc client server connection
 	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Println(err)
@@ -47,75 +46,26 @@ func main() {
 
 	router := gin.Default()
 
-	bh := handlers.NewBookings(l, db)
-	ch := handlers.NewClients(l, db)
+	bh := handlers.NewBookings(l, bookingDb)
+	ch := handlers.NewClients(l, bookingDb)
 
+	// Handle requests for booking
 	bookingGroup := router.Group("/booking")
 	{
-		client := bookingGroup.Group("/client")
-		{
-			client.GET("/", bh.ListBookings)
-			client.POST("/", bh.CreateBooking)
-			client.PUT("/", bh.UpdateBooking)
-		}
-		bookingGroup.GET("/hotels", func(ctx *gin.Context) {
-			ctxgrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			log.Println("Grpc connection established")
-			stream, err := grpcClient.GetHotels(ctxgrpc, &pb.GetHotelsRequest{})
-			if err != nil {
-				log.Fatal("error")
-			}
-			var hotelList []struct {
-				HotelID        uint   `json:"hotel_id"`
-				Name           string `json:"name"`
-				Rating         int    `json:"rating"`
-				Country        string `json:"country"`
-				Description    string `json:"description"`
-				RoomsAvailable int    `json:"rooms_available"`
-				Price          int    `json:"price"`
-				Address        string `json:"address"`
-			}
-			for {
-				res, err := stream.Recv()
-				if err == io.EOF {
-					log.Print("Grpc connection ended")
-					break
-				}
-				if err != nil {
-					log.Print("error")
-					ctx.JSON(500, gin.H{"error": "Error from getting information"})
-					return
-				}
-				hotelList = append(hotelList, struct {
-					HotelID        uint   `json:"hotel_id"`
-					Name           string `json:"name"`
-					Rating         int    `json:"rating"`
-					Country        string `json:"country"`
-					Description    string `json:"description"`
-					RoomsAvailable int    `json:"rooms_available"`
-					Price          int    `json:"price"`
-					Address        string `json:"address"`
-				}{
-					HotelID:        uint(res.Hotel.HotelID),
-					Name:           res.Hotel.Name,
-					Rating:         int(res.Hotel.Rating),
-					Country:        res.Hotel.Country,
-					Description:    res.Hotel.Description,
-					RoomsAvailable: int(res.Hotel.RoomAvaible),
-					Price:          int(res.Hotel.Price),
-					Address:        res.Hotel.Address,
-				})
-			}
+		// Handler to get room price of a hotel by ID
+		bookingGroup.GET("/hotel", bh.GetHotelPrice(grpcClient))
+		bookingGroup.GET("/", bh.GetBookings)
+		bookingGroup.POST("/", bh.PostBooking)
+		bookingGroup.PUT("/", bh.PutBooking)
 
-			ctx.JSON(200, gin.H{
-				"hotels": hotelList,
-			})
-		})
-		bookingGroup.GET("/", ch.ListClients)
-		bookingGroup.POST("/", ch.AddClient)
-		bookingGroup.PUT("/", ch.UpdateClient)
+	}
 
+	// Handle requests for client
+	clientGroup := router.Group("/client")
+	{
+		clientGroup.GET("/", ch.GetClients)
+		clientGroup.POST("/", ch.PostClient)
+		clientGroup.PUT("/", ch.UpdateClient)
 	}
 
 	// Set up a channel to listen to for interrupt signals
