@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/hotel-svc/databases"
+	"github.com/maxturyev/booking-system-project/hotel-svc/db"
 	"github.com/maxturyev/booking-system-project/hotel-svc/models"
 	"gorm.io/gorm"
 )
@@ -22,41 +22,42 @@ func NewHotels(l *log.Logger, db *gorm.DB) *Hotels {
 	return &Hotels{l, db}
 }
 
-// getHotels returns the hotels from the date store
+// GetHotels returns the hotels from the database
 func (h *Hotels) GetHotels(ctx *gin.Context) {
 	h.l.Println("Handle GET")
 
 	// fetch the hotels from the datastore
-	lh := databases.GetHotels(h.db)
+	lh := db.GetHotels(h.db)
 
 	ctx.JSON(http.StatusOK, lh)
 }
 
+// GetHotelByID returns the hotels from the database by ID
 func (h *Hotels) GetHotelByID(ctx *gin.Context) {
 	h.l.Println("Handle GET")
 	id, _ := strconv.Atoi(ctx.Param("id"))
-	lh := databases.GetHotelByID(h.db, id)
+	lh := db.GetHotelByID(h.db, id)
 
 	ctx.JSON(http.StatusOK, lh)
 }
 
-// methon which can changing any rows in database
+// UpdateHotel updates hotel info
 func (h *Hotels) UpdateHotel(ctx *gin.Context) {
 	h.l.Println("Handle PUT")
 
 	var hotel models.Hotel
 
+	// deserialize the struct from JSON
 	if err := ctx.ShouldBindJSON(&hotel); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	//checking a correctly serilization of format json to our models
-	h.l.Println(hotel)
-	err := databases.UpdateHotel(h.db, hotel)
+
+	err := db.UpdateHotel(h.db, hotel)
 	h.l.Println(err)
 }
 
-// addHotel adds a hotel to the date store
+// AddHotel adds a hotel to the database
 func (h *Hotels) AddHotel(ctx *gin.Context) {
 	h.l.Println("Handle POST")
 
@@ -67,7 +68,7 @@ func (h *Hotels) AddHotel(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	databases.CreateHotel(h.db, hotel)
+	db.CreateHotel(h.db, hotel)
 }
 
 // // POST upload image

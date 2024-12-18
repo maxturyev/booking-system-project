@@ -1,4 +1,4 @@
-package databases
+package db
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/models"
+	"github.com/maxturyev/booking-system-project/hotel-svc/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// ConnectDB establishes a connection to booking database
+// ConnectDB establishes a connection to hotels database
 func ConnectDB() *gorm.DB {
 	// Load postgres server config
 	err := godotenv.Load()
@@ -21,14 +21,14 @@ func ConnectDB() *gorm.DB {
 
 	// Initialize connection to Hotels database
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("Host"),
-		os.Getenv("Port"), os.Getenv("User"), os.Getenv("Password"), os.Getenv("BookingDB"))
+		os.Getenv("Port"), os.Getenv("User"), os.Getenv("Password"), os.Getenv("HotelDB"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
-	// Migrates models to the database as tables
-	if err := db.AutoMigrate(&models.Client{}, &models.Booking{}); err != nil {
+	// Migrate models to the database as tables
+	if err := db.AutoMigrate(&models.Hotelier{}, &models.Hotel{}); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
 

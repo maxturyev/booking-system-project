@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"log"
 	"net/http"
@@ -20,32 +22,28 @@ import (
 )
 
 func main() {
-	// Generate our config based on the config supplied
-	// by the user in the flags
-	cfgPath, err := common.ParseFlags()
-	if err != nil {
-		log.Fatal(err)
-	}
-	cfg, err := common.NewConfig(cfgPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Generate http server config
+	cfg := common.NewConfig()
 
 	// Create logger
 	l := log.New(os.Stdout, "booking-svc", log.LstdFlags)
 
 	// Connect to database
-	db, err := databases.Init()
-	if err != nil {
-		panic(err)
-	}
+	db := databases.ConnectDB()
+
 	//grpc client server connection
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal("error: can not connection")
+		log.Println(err)
 	}
-	defer conn.Close()
-	clientgrpc := pb.NewHotelServiceClient(conn)
+	defer func(conn *grpc.ClientConn) {
+		err := conn.Close()
+		if err != nil {
+
+		}
+	}(conn)
+
+	grpcClient := pb.NewHotelServiceClient(conn)
 
 	router := gin.Default()
 
@@ -63,8 +61,8 @@ func main() {
 		bookingGroup.GET("/hotels", func(ctx *gin.Context) {
 			ctxgrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			log.Println("in grpc")
-			stream, err := clientgrpc.GetHotels(ctxgrpc, &pb.GetHotelsRequest{})
+			log.Println("Grpc connection established")
+			stream, err := grpcClient.GetHotels(ctxgrpc, &pb.GetHotelsRequest{})
 			if err != nil {
 				log.Fatal("error")
 			}
@@ -81,7 +79,7 @@ func main() {
 			for {
 				res, err := stream.Recv()
 				if err == io.EOF {
-					log.Print("Ended")
+					log.Print("Grpc connection ended")
 					break
 				}
 				if err != nil {
@@ -150,7 +148,7 @@ func main() {
 	// Run the server on a new goroutine
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
+			if errors.Is(err, http.ErrServerClosed) {
 				// Normal interrupt operation, ignore
 			} else {
 				log.Fatalf("Server failed to start due to err: %v", err)

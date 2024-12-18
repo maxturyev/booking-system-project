@@ -13,7 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/hotel-svc/common"
-	"github.com/maxturyev/booking-system-project/hotel-svc/databases"
+	"github.com/maxturyev/booking-system-project/hotel-svc/db"
 	grpcserver "github.com/maxturyev/booking-system-project/hotel-svc/grpc-server"
 	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
@@ -35,25 +35,15 @@ func validateNumericID() gin.HandlerFunc {
 }
 
 func main() {
-	// Generate our config based on the config supplied
-	// by the user in the flags
-	cfgPath, err := common.ParseFlags()
-	if err != nil {
-		log.Fatal(err)
-	}
-	cfg, err := common.NewConfig(cfgPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Generate http server config
+	cfg := common.NewConfig()
 
 	// Create logger
 	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
 
 	// Connect to database
-	hotel_db, err := databases.Init()
-	if err != nil {
-		panic(err)
-	}
+	hotelDb := db.ConnectDB()
+
 	go func() {
 		// Creating grpc-server
 		lis, err := net.Listen("tcp", ":50051")
@@ -61,31 +51,34 @@ func main() {
 			log.Fatal("Error")
 		}
 		grpcServer := grpc.NewServer()
-		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotel_db})
-		log.Println("Grpc started succesfully")
+		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
+		log.Println("Grpc server started successfully")
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Ошибка запуска сервера: %v", err)
 		}
 	}()
+
 	// Create router and define routes and return that router
 	router := gin.Default()
 
 	// Create handlers
-	hh := handlers.NewHotels(l, hotel_db)
-	//	ch := api.NewClient(l)
-	hth := handlers.NewHotelier(l, hotel_db)
+	hh := handlers.NewHotels(l, hotelDb)
+	hth := handlers.NewHotelier(l, hotelDb)
+
+	// Handle http requests for hotel
 	hotelGroup := router.Group("/hotel")
 	{
 		hotelGroup.GET("/", hh.GetHotels)
+		hotelGroup.GET("/:id", validateNumericID(), hh.GetHotelByID)
 		hotelGroup.POST("/", hh.AddHotel)
-		hotelGroup.POST("/:id", validateNumericID(), hh.GetHotelByID)
 	}
+
+	// Handle http requests for hotelier
 	hotelierGroup := router.Group("/hotelier")
 	{
 		hotelierGroup.GET("/", hth.GetHoteliers)
 		hotelierGroup.POST("/", hth.AddHotel)
 	}
-	//	router.Handle("/client/", ch)
 
 	// Set up a channel to listen to for interrupt signals
 	var runChan = make(chan os.Signal, 1)

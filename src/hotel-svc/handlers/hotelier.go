@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/hotel-svc/databases"
+	"github.com/maxturyev/booking-system-project/hotel-svc/db"
 	"github.com/maxturyev/booking-system-project/hotel-svc/models"
 	"gorm.io/gorm"
 )
@@ -21,7 +21,7 @@ func NewHotelier(l *log.Logger, db *gorm.DB) *Hotelier {
 
 func (h *Hotelier) GetHoteliers(ctx *gin.Context) {
 	h.l.Println("Handle GET")
-	lh := databases.GetHoteliers(h.db)
+	lh := db.GetHoteliers(h.db)
 	ctx.JSON(http.StatusOK, lh)
 }
 
@@ -32,5 +32,5 @@ func (h *Hotelier) AddHotel(ctx *gin.Context) {
 	if err := ctx.ShouldBind(&hotelier); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
-	databases.CreateHotelier(h.db, hotelier)
+	db.CreateHotelier(h.db, hotelier)
 }

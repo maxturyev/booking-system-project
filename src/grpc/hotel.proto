@@ -10,8 +10,8 @@ message Hotel {
     int32 rating = 3;
     string country = 4;
     string description = 5;
-    int32 room_avaible = 6;
-    int32 price = 7;
+    int32 room_available = 6;
+    int32 room_price = 7;
     string address = 8; 
 }
 

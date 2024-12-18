@@ -3,6 +3,7 @@ package common
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -23,7 +24,7 @@ type Config struct {
 			Server time.Duration `yaml:"server"`
 
 			// Write is the amount of time to wait until an HTTP server
-			// write opperation is cancelled
+			// write operation is cancelled
 			Write time.Duration `yaml:"write"`
 
 			// Read is the amount of time to wait until an HTTP server
@@ -38,26 +39,37 @@ type Config struct {
 }
 
 // NewConfig returns a new decoded Config struct
-func NewConfig(configPath string) (*Config, error) {
+func NewConfig() *Config {
+	// Get path to config file
+	configPath, err := ParseFlags()
+	if err != nil {
+		log.Fatalf("Failed to reach config file: %v", err)
+	}
+
 	// Create config structure
 	config := &Config{}
 
 	// Open config file
 	file, err := os.Open(configPath)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Printf("Failed to close config file: %v", err)
+		}
+	}(file)
 
 	// Init new YAML decode
 	d := yaml.NewDecoder(file)
 
 	// Start YAML decoding from file
 	if err := d.Decode(&config); err != nil {
-		return nil, err
+		log.Fatalf("Failed to get config from yaml file: %v", err)
 	}
 
-	return config, nil
+	return config
 }
 
 // ValidateConfigPath just makes sure, that the path provided is a file,
