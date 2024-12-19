@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
@@ -38,6 +39,12 @@ func validateNumericID() gin.HandlerFunc {
 }
 
 func main() {
+	// Load envs
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// to produce messages
 	topic := "my-topic"
 	partition := 0
@@ -59,16 +66,12 @@ func main() {
 	bookingDb := db.ConnectDB()
 
 	// Grpc client server connection
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVER_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Println(err)
 	}
-	defer func(conn *grpc.ClientConn) {
-		err := conn.Close()
-		if err != nil {
-			log.Fatalf("could not close the connection %v", err)
-		}
-	}(conn)
+
+	defer conn.Close()
 
 	grpcClient := pb.NewHotelServiceClient(conn)
 

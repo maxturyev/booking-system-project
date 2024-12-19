@@ -25,8 +25,8 @@ type Bookings struct {
 }
 
 // NewBookings creates a bookings handler
-func NewBookings(l *log.Logger, db *gorm.DB, broker *kafka.Conn) *Bookings {
-	return &Bookings{l, db, broker}
+func NewBookings(l *log.Logger, db *gorm.DB, kc *kafka.Conn) *Bookings {
+	return &Bookings{l, db, kc}
 }
 
 // GetBookings handles GET request to list all bookings
@@ -67,32 +67,7 @@ func (c *Bookings) PostBooking(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&booking); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
-
-	// BookingEvent - структура для нашего сообщения
-	type BookingEvent struct {
-		ID    uint32 `json:"id"`
-		Name  string `json:"name"`
-		Value string `json:"value"`
-	}
-
-	requestID := uuid.New().ID()
-
-	bookingEvent := BookingEvent{
-		ID: requestID,
-
-	}
-	_, err := c.kc.WriteMessages(
-		kafka.Message{Key: uuid., Value: []byte("one!")},
-		kafka.Message{Value: []byte("two!")},
-		kafka.Message{Value: []byte("three!")},
-	)
-	if err != nil {
-		log.Fatal("failed to write messages:", err)
-	}
-
-	if err := kafkaConn.Close(); err != nil {
-		log.Fatal("failed to close writer:", err)
-	}
+	// Add booking to database
 	db.CreateBooking(c.db, booking)
 
 	// Send kafka message
@@ -191,6 +166,6 @@ func sendKafkaMessage(jsonData []byte, kc *kafka.Conn) {
 	// Send message to kafka
 	_, err := kc.WriteMessages(msg)
 	if err != nil {
-		log.Fatal("failed to write messages:", err)
+		log.Println("failed to write messages:", err)
 	}
 }
