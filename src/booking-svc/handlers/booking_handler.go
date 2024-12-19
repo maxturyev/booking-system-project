@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 )
 
@@ -19,11 +21,12 @@ import (
 type Bookings struct {
 	l  *log.Logger
 	db *gorm.DB
+	kc *kafka.Conn
 }
 
 // NewBookings creates a bookings handler
-func NewBookings(l *log.Logger, db *gorm.DB) *Bookings {
-	return &Bookings{l, db}
+func NewBookings(l *log.Logger, db *gorm.DB, kc *kafka.Conn) *Bookings {
+	return &Bookings{l, db, kc}
 }
 
 // GetBookings handles GET request to list all bookings
@@ -58,13 +61,17 @@ func (c *Bookings) PostBooking(ctx *gin.Context) {
 	c.l.Println("Handle POST")
 
 	var booking models.Booking
+	jsonData, _ := io.ReadAll(ctx.Request.Body)
 
 	// deserialize the struct from JSON
 	if err := ctx.ShouldBindJSON(&booking); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
-
+	// Add booking to database
 	db.CreateBooking(c.db, booking)
+
+	// Send kafka message
+	sendKafkaMessage(jsonData, c.kc)
 }
 
 func (c *Bookings) GetHotelPriceByID(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
@@ -144,5 +151,21 @@ func (c *Bookings) GetHotels(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
 		ctx.JSON(200, gin.H{
 			"hotels": hotelList,
 		})
+	}
+}
+
+func sendKafkaMessage(jsonData []byte, kc *kafka.Conn) {
+	// Generate kafka event key
+	requestID := uuid.NewString()
+
+	log.Println(string(jsonData))
+
+	// Kafka message to be sent
+	msg := kafka.Message{Topic: "my-topic", Key: []byte(requestID), Value: jsonData}
+
+	// Send message to kafka
+	_, err := kc.WriteMessages(msg)
+	if err != nil {
+		log.Println("failed to write messages:", err)
 	}
 }
