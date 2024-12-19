@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
+	"github.com/segmentio/kafka-go"
 )
 
 func validateNumericID() gin.HandlerFunc {
@@ -37,6 +39,23 @@ func validateNumericID() gin.HandlerFunc {
 }
 
 func main() {
+	// Load envs
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// to produce messages
+	topic := "my-topic"
+	partition := 0
+
+	// Init kafka connection
+	kafkaConn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, partition)
+	if err != nil {
+		log.Fatal("failed to dial leader:", err)
+	}
+	//kafkaConn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+
 	// Generate http server config
 	cfg := common.NewConfig()
 
@@ -47,20 +66,18 @@ func main() {
 	bookingDb := db.ConnectDB()
 
 	// Grpc client server connection
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVER_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Println(err)
 	}
-	defer func(conn *grpc.ClientConn) {
-		err := conn.Close()
-		if err != nil {
-			log.Fatalf("could not close the connection %v", err)
-		}
-	}(conn)
+
+	defer conn.Close()
 
 	grpcClient := pb.NewHotelServiceClient(conn)
+
 	router := gin.Default()
-	bh := handlers.NewBookings(l, bookingDb)
+
+	bh := handlers.NewBookings(l, bookingDb, kafkaConn)
 	ch := handlers.NewClients(l, bookingDb)
 
 	// Handle requests for booking

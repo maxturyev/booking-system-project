@@ -3,16 +3,15 @@ package models
 import "time"
 
 // Booking defines the structure for a booking API
-// Определяет структуру для API бронирования
 type Booking struct {
-	BookingID int       `gorm:"primaryKey;autoIncrement" json:"booking_id"`
-	ClientID  int       `json:"client_id"`
+	BookingID uint      `gorm:"primaryKey" json:"booking_id"`
 	HotelID   int       `json:"hotel_id"`
 	DateStart time.Time `json:"date_start"`
 	DateEnd   time.Time `json:"date_end"`
 	Price     int       `json:"price"`
 	Status    string    `json:"status"`
+	ClientID  uint      `json:"client_id"`
 }
 
-// Bookings is a collection of client
+// Bookings is a collection of Booking
 type Bookings []*Booking

@@ -35,8 +35,10 @@ func validateNumericID() gin.HandlerFunc {
 	}
 }
 
+const port = ":50051"
+
 func main() {
-	// Generate http server config
+	// Generate httpServer config
 	cfg := common.NewConfig()
 
 	// Create logger
@@ -45,16 +47,19 @@ func main() {
 	// Connect to database
 	hotelDb := db.ConnectDB()
 
+	// Create grpc httpServer
+	grpcServer := grpc.NewServer()
+
+	// Run the http httpServer on a new goroutine
 	go func() {
-		// Creating grpc-server
-		lis, err := net.Listen("tcp", ":50051")
+		lis, err := net.Listen("tcp", port)
 		if err != nil {
-			log.Fatalf("Error starting server: %v", err)
+			log.Fatalf("failed to create listener: %s", err)
 		}
 
-		grpcServer := grpc.NewServer()
 		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
-		log.Println("Grpc server started successfully")
+
+		log.Printf("Grpc httpServer started  on port %s", port)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Ошибка запуска сервера: %v", err)
 		}
@@ -85,7 +90,7 @@ func main() {
 	// Set up a channel to listen to for interrupt signals
 	var runChan = make(chan os.Signal, 1)
 
-	// Set up a context to allow for graceful server shutdowns in the event
+	// Set up a context to allow for graceful httpServer shutdowns in the event
 	// of an OS interrupt (defers the cancel just in case)
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
@@ -93,8 +98,8 @@ func main() {
 	)
 	defer cancel()
 
-	// Define server options
-	server := &http.Server{
+	// Define http httpServer options
+	httpServer := &http.Server{
 		Addr:         cfg.Server.Host + ":" + cfg.Server.Port,
 		Handler:      router,
 		ReadTimeout:  cfg.Server.Timeout.Read * time.Second,
@@ -105,12 +110,12 @@ func main() {
 	// Handle ctrl+c/ctrl+x interrupt
 	signal.Notify(runChan, os.Interrupt, syscall.SIGTSTP)
 
-	// Alert the user that the server is starting
-	log.Printf("Server is starting on %s\n", server.Addr)
+	// Alert the user that the httpServer is starting
+	log.Printf("Server is starting on %s\n", httpServer.Addr)
 
-	// Run the server on a new goroutine
+	// Run the http httpServer on a new goroutine
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
+		if err := httpServer.ListenAndServe(); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				// Normal interrupt operation, ignore
 			} else {
@@ -120,13 +125,13 @@ func main() {
 	}()
 
 	// Block on this channel listening for those previously defined syscalls assign
-	// to variable so we can let the user know why the server is shutting down
+	// to variable so we can let the user know why the httpServer is shutting down
 	interrupt := <-runChan
 
-	// If we get one of the pre-prescribed syscalls, gracefully terminate the server
+	// If we get one of the pre-prescribed syscalls, gracefully terminate the httpServer
 	// while alerting the user
 	log.Printf("Server is shutting down due to %+v\n", interrupt)
-	if err := server.Shutdown(ctx); err != nil {
+	if err := httpServer.Shutdown(ctx); err != nil {
 		log.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
 

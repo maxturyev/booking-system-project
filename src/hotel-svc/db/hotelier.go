@@ -11,13 +11,13 @@ func CreateHotelier(db *gorm.DB, hotelier models.Hotelier) {
 }
 
 // SelectHoteliers returns all hoteliers from the database
-func SelectHoteliers(db *gorm.DB) []models.Hotelier {
-	var hotelier []models.Hotelier
+func SelectHoteliers(db *gorm.DB) models.Hoteliers {
+	var hoteliers models.Hoteliers
 
-	result := db.Find(&hotelier)
+	result := db.Find(&hoteliers)
 	if result.Error != nil {
 		panic("Error")
 	}
 
-	return hotelier
+	return hoteliers
 }
