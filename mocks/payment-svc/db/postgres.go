@@ -2,11 +2,12 @@ package db
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 
-	"github.com/maxturyev/booking-system-project/hotel-svc/models"
+	"github.com/joho/godotenv"
+
+	"github.com/maxturyev/booking-system-project/payment-svc/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

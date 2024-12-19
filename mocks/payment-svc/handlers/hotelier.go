@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/hotel-svc/db"
-	"github.com/maxturyev/booking-system-project/hotel-svc/models"
+	"github.com/maxturyev/booking-system-project/payment-svc/db"
+	"github.com/maxturyev/booking-system-project/payment-svc/models"
 	"gorm.io/gorm"
 )
 

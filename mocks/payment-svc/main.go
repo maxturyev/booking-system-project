@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +32,7 @@ func main() {
 	fmt.Println(cfg.Server.Host, cfg.Server.Port)
 
 	// Create logger
-	// l := log.New(os.Stdout, "payment-api", log.LstdFlags)
+	l := log.New(os.Stdout, "payment-api", log.LstdFlags)
 
 	// // Connect to database
 	// hotelDb := db.ConnectDB()

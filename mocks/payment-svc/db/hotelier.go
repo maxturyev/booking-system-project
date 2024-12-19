@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/maxturyev/booking-system-project/hotel-svc/models"
+	"github.com/maxturyev/booking-system-project/payment-svc/models"
 	"gorm.io/gorm"
 )
 

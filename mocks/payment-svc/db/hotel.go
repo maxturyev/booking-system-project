@@ -2,9 +2,10 @@ package db
 
 import (
 	"errors"
-	"github.com/maxturyev/booking-system-project/hotel-svc/models"
-	"gorm.io/gorm"
 	"log"
+
+	"github.com/maxturyev/booking-system-project/payment-svc/models"
+	"gorm.io/gorm"
 )
 
 // CreateHotel creates a hotel to the database
