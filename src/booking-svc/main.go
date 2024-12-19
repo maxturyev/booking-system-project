@@ -18,9 +18,21 @@ import (
 
 	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
+	"github.com/segmentio/kafka-go"
 )
 
 func main() {
+	// to produce messages
+	topic := "my-topic"
+	partition := 0
+
+	// Init kafka connection
+	kafkaConn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, partition)
+	if err != nil {
+		log.Fatal("failed to dial leader:", err)
+	}
+	kafkaConn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+
 	// Generate http server config
 	cfg := common.NewConfig()
 
@@ -35,18 +47,14 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	defer func(conn *grpc.ClientConn) {
-		err := conn.Close()
-		if err != nil {
 
-		}
-	}(conn)
+	defer conn.Close()
 
 	grpcClient := pb.NewHotelServiceClient(conn)
 
 	router := gin.Default()
 
-	bh := handlers.NewBookings(l, bookingDb)
+	bh := handlers.NewBookings(l, bookingDb, kafkaConn)
 	ch := handlers.NewClients(l, bookingDb)
 
 	// Handle requests for booking

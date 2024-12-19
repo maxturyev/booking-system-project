@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"io"
 	"log"
@@ -17,11 +19,12 @@ import (
 type Bookings struct {
 	l  *log.Logger
 	db *gorm.DB
+	kc *kafka.Conn
 }
 
 // NewBookings creates a bookings handler
-func NewBookings(l *log.Logger, db *gorm.DB) *Bookings {
-	return &Bookings{l, db}
+func NewBookings(l *log.Logger, db *gorm.DB, broker *kafka.Conn) *Bookings {
+	return &Bookings{l, db, broker}
 }
 
 // GetBookings handles GET request to list all bookings
@@ -62,6 +65,31 @@ func (c *Bookings) PostBooking(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
+	// BookingEvent - структура для нашего сообщения
+	type BookingEvent struct {
+		ID    uint32 `json:"id"`
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+
+	requestID := uuid.New().ID()
+
+	bookingEvent := BookingEvent{
+		ID: requestID,
+
+	}
+	_, err := c.kc.WriteMessages(
+		kafka.Message{Key: uuid., Value: []byte("one!")},
+		kafka.Message{Value: []byte("two!")},
+		kafka.Message{Value: []byte("three!")},
+	)
+	if err != nil {
+		log.Fatal("failed to write messages:", err)
+	}
+
+	if err := kafkaConn.Close(); err != nil {
+		log.Fatal("failed to close writer:", err)
+	}
 	db.CreateBooking(c.db, booking)
 }
 
