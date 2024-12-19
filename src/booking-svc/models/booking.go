@@ -4,7 +4,7 @@ import "time"
 
 // Booking defines the structure for a booking API
 type Booking struct {
-	BookingID uint      `gorm:"primaryKey;autoIncrement" json:"booking_id"`
+	BookingID uint      `gorm:"primaryKey" json:"booking_id"`
 	HotelID   int       `json:"hotel_id"`
 	DateStart time.Time `json:"date_start"`
 	DateEnd   time.Time `json:"date_end"`

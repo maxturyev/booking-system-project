@@ -1,2 +1,29 @@
+name: booking-system-project
 
-    
+services:
+  hotel-svc:
+    build: ./hotel-svc
+    ports:
+      - 9090:9090
+    environment:
+      -
+      - "HOTEL_SERVICE_ADDR=localhost:50051"
+
+
+  booking-svc:
+    build: ./booking-svc
+    ports:
+      - 9091:9091
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: hotels_data
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+
+
+  kafka:
+
+  notificaticn-svc:

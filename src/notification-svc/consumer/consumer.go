@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
+	"time"
 )
 
 func main() {
@@ -17,8 +18,12 @@ func main() {
 		log.Fatal("failed to dial leader:", err)
 	}
 
-	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	log.Println("asdasd")
+
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
+
+	log.Println("readbatch")
 
 	b := make([]byte, 10e3) // 10KB max per message
 	for {

@@ -64,7 +64,7 @@ func (h *Hotels) PutHotel(ctx *gin.Context) {
 
 // PostHotel handles POST request to create a hotel
 func (h *Hotels) PostHotel(ctx *gin.Context) {
-	h.l.Println("Handle POST")
+	h.l.Println("Handle POST hotel")
 
 	var hotel models.Hotel
 

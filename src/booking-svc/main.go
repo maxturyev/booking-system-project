@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to dial leader:", err)
 	}
-	kafkaConn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	//kafkaConn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 
 	// Generate http server config
 	cfg := common.NewConfig()
