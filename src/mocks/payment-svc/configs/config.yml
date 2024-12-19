@@ -1,6 +1,6 @@
 server:
   host: 127.0.0.1
-  port: 9091
+  port: 9095
   timeout:
     server: 30
     read: 15
