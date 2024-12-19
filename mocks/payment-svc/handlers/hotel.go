@@ -2,79 +2,77 @@ package handlers
 
 import (
 	"log"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/payment-svc/db"
-	"github.com/maxturyev/booking-system-project/payment-svc/models"
 	"gorm.io/gorm"
 )
 
 // Hotels is a http.Handler
-type Hotels struct {
+type HandlerPayments struct {
 	l  *log.Logger
 	db *gorm.DB
 }
 
 // NewHotels creates a hotels handler
-func NewHotels(l *log.Logger, db *gorm.DB) *Hotels {
-	return &Hotels{l, db}
+func NewPayments(l *log.Logger, db *gorm.DB) *HandlerPayments {
+	return &HandlerPayments{l, db}
 }
 
 // GetHotels handles GET request to list all hotels
-func (h *Hotels) GetHotels(ctx *gin.Context) {
-	h.l.Println("Handle GET")
+func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
+	h.l.Println("Now is some error 5xx")
 
-	// fetch the hotels from the database
-	lh := db.SelectHotels(h.db)
+	ctx.JSON(503, gin.H{"error": "Bad news"})
 
-	// serialize the list to JSON
-	ctx.JSON(http.StatusOK, lh)
+	// // fetch the hotels from the database
+	// lh := db.SelectHotels(h.db)
+
+	// // serialize the list to JSON
+	// ctx.JSON(http.StatusOK, lh)
 }
 
-// GetHotelByID handles GET request to return a hotel by id
-func (h *Hotels) GetHotelByID(ctx *gin.Context) {
-	h.l.Println("Handle GET")
-	id, _ := strconv.Atoi(ctx.Param("id"))
+// // GetHotelByID handles GET request to return a hotel by id
+// func (h *Hotels) GetHotelByID(ctx *gin.Context) {
+// 	h.l.Println("Handle GET")
+// 	id, _ := strconv.Atoi(ctx.Param("id"))
 
-	// fetch the hotel from the database
-	hotel := db.SelectHotelByID(h.db, id)
+// 	// fetch the hotel from the database
+// 	hotel := db.SelectHotelByID(h.db, id)
 
-	// serialize the model to JSON
-	ctx.JSON(http.StatusOK, hotel)
-}
+// 	// serialize the model to JSON
+// 	ctx.JSON(http.StatusOK, hotel)
+// }
 
-// PutHotel handles PUT request to update a hotel
-func (h *Hotels) PutHotel(ctx *gin.Context) {
-	h.l.Println("Handle PUT")
+// // PutHotel handles PUT request to update a hotel
+// func (h *Hotels) PutHotel(ctx *gin.Context) {
+// 	h.l.Println("Handle PUT")
 
-	var hotel models.Hotel
+// 	var hotel models.Hotel
 
-	// deserialize the struct from JSON
-	if err := ctx.ShouldBindJSON(&hotel); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+// 	// deserialize the struct from JSON
+// 	if err := ctx.ShouldBindJSON(&hotel); err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	if err := db.UpdateHotel(h.db, hotel); err != nil {
-		h.l.Println(err)
-	}
-}
+// 	if err := db.UpdateHotel(h.db, hotel); err != nil {
+// 		h.l.Println(err)
+// 	}
+// }
 
-// PostHotel handles POST request to create a hotel
-func (h *Hotels) PostHotel(ctx *gin.Context) {
-	h.l.Println("Handle POST")
+// // PostHotel handles POST request to create a hotel
+// func (h *Hotels) PostHotel(ctx *gin.Context) {
+// 	h.l.Println("Handle POST")
 
-	var hotel models.Hotel
+// 	var hotel models.Hotel
 
-	// deserialize the struct from JSON
-	if err := ctx.ShouldBindJSON(&hotel); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	}
+// 	// deserialize the struct from JSON
+// 	if err := ctx.ShouldBindJSON(&hotel); err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 	}
 
-	db.CreateHotel(h.db, hotel)
-}
+// 	db.CreateHotel(h.db, hotel)
+// }
 
 // // POST upload image
 // func (h *Hotels) HandleUploadImage(ctx *gin.Context) {
