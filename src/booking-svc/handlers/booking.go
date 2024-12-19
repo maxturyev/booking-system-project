@@ -61,6 +61,7 @@ func (c *Bookings) PostBooking(ctx *gin.Context) {
 	c.l.Println("Handle POST")
 
 	var booking models.Booking
+	jsonData, _ := io.ReadAll(ctx.Request.Body)
 
 	// deserialize the struct from JSON
 	if err := ctx.ShouldBindJSON(&booking); err != nil {
@@ -93,6 +94,9 @@ func (c *Bookings) PostBooking(ctx *gin.Context) {
 		log.Fatal("failed to close writer:", err)
 	}
 	db.CreateBooking(c.db, booking)
+
+	// Send kafka message
+	sendKafkaMessage(jsonData, c.kc)
 }
 
 func (c *Bookings) GetHotelPriceByID(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
@@ -172,5 +176,21 @@ func (c *Bookings) GetHotels(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
 		ctx.JSON(200, gin.H{
 			"hotels": hotelList,
 		})
+	}
+}
+
+func sendKafkaMessage(jsonData []byte, kc *kafka.Conn) {
+	// Generate kafka event key
+	requestID := uuid.NewString()
+
+	log.Println(string(jsonData))
+
+	// Kafka message to be sent
+	msg := kafka.Message{Topic: "my-topic", Key: []byte(requestID), Value: jsonData}
+
+	// Send message to kafka
+	_, err := kc.WriteMessages(msg)
+	if err != nil {
+		log.Fatal("failed to write messages:", err)
 	}
 }
