@@ -73,25 +73,6 @@ func main() {
 	// Create router and define routes and return that router
 	router := gin.Default()
 
-	// // Create handlers
-	// hh := handlers.NewHotels(l, hotelDb)
-	// hth := handlers.NewHoteliers(l, hotelDb)
-
-	// // Handle requests for hotel
-	// hotelGroup := router.Group("/hotel")
-	// {
-	// 	hotelGroup.GET("/", hh.GetHotels)
-	// 	hotelGroup.GET("/:id", validateNumericID(), hh.GetHotelByID)
-	// 	hotelGroup.POST("/", hh.PostHotel)
-	// }
-
-	// // Handle requests for hotelier
-	// hotelierGroup := router.Group("/hotelier")
-	// {
-	// 	hotelierGroup.GET("/", hth.GetHoteliers)
-	// 	hotelierGroup.POST("/", hth.PostHotelier)
-	// }
-
 	onlyH := handlers.NewPayments(l, hotelDb)
 	paymentGroup := router.Group("/payment")
 	{
