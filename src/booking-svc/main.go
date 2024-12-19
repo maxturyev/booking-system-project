@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
+
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/booking-svc/common"
@@ -20,6 +22,20 @@ import (
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
 	"github.com/segmentio/kafka-go"
 )
+
+func validateNumericID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		match, _ := regexp.MatchString(`^\d+$`, id)
+		if !match {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
 
 func main() {
 	// to produce messages
@@ -47,8 +63,12 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-
-	defer conn.Close()
+	defer func(conn *grpc.ClientConn) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatalf("could not close the connection %v", err)
+		}
+	}(conn)
 
 	grpcClient := pb.NewHotelServiceClient(conn)
 
@@ -61,7 +81,8 @@ func main() {
 	bookingGroup := router.Group("/booking")
 	{
 		// Handler to get room price of a hotel by ID
-		bookingGroup.GET("/hotel", bh.GetHotelPrice(grpcClient))
+		bookingGroup.GET("/hotel", bh.GetHotels(grpcClient))
+		bookingGroup.GET("/hotel/:id", validateNumericID(), bh.GetHotelPriceByID(grpcClient))
 		bookingGroup.GET("/", bh.GetBookings)
 		bookingGroup.POST("/", bh.PostBooking)
 		bookingGroup.PUT("/", bh.PutBooking)

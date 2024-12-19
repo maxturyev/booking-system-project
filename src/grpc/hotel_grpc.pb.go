@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	HotelService_GetHotels_FullMethodName    = "/grpc.HotelService/GetHotels"
-	HotelService_GetHotelByID_FullMethodName = "/grpc.HotelService/GetHotelByID"
+	HotelService_GetHotels_FullMethodName         = "/grpc.HotelService/GetHotels"
+	HotelService_GetHotelPriceByID_FullMethodName = "/grpc.HotelService/GetHotelPriceByID"
 )
 
 // HotelServiceClient is the client API for HotelService service.
@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HotelServiceClient interface {
 	GetHotels(ctx context.Context, in *GetHotelsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetHotelsResponse], error)
-	GetHotelByID(ctx context.Context, in *GetHotelByIDRequest, opts ...grpc.CallOption) (*GetHotelByIDResponse, error)
+	GetHotelPriceByID(ctx context.Context, in *GetHotelPriceByIDRequest, opts ...grpc.CallOption) (*GetHotelPriceByIDResponse, error)
 }
 
 type hotelServiceClient struct {
@@ -58,10 +58,10 @@ func (c *hotelServiceClient) GetHotels(ctx context.Context, in *GetHotelsRequest
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type HotelService_GetHotelsClient = grpc.ServerStreamingClient[GetHotelsResponse]
 
-func (c *hotelServiceClient) GetHotelByID(ctx context.Context, in *GetHotelByIDRequest, opts ...grpc.CallOption) (*GetHotelByIDResponse, error) {
+func (c *hotelServiceClient) GetHotelPriceByID(ctx context.Context, in *GetHotelPriceByIDRequest, opts ...grpc.CallOption) (*GetHotelPriceByIDResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetHotelByIDResponse)
-	err := c.cc.Invoke(ctx, HotelService_GetHotelByID_FullMethodName, in, out, cOpts...)
+	out := new(GetHotelPriceByIDResponse)
+	err := c.cc.Invoke(ctx, HotelService_GetHotelPriceByID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (c *hotelServiceClient) GetHotelByID(ctx context.Context, in *GetHotelByIDR
 // for forward compatibility.
 type HotelServiceServer interface {
 	GetHotels(*GetHotelsRequest, grpc.ServerStreamingServer[GetHotelsResponse]) error
-	GetHotelByID(context.Context, *GetHotelByIDRequest) (*GetHotelByIDResponse, error)
+	GetHotelPriceByID(context.Context, *GetHotelPriceByIDRequest) (*GetHotelPriceByIDResponse, error)
 	mustEmbedUnimplementedHotelServiceServer()
 }
 
@@ -87,8 +87,8 @@ type UnimplementedHotelServiceServer struct{}
 func (UnimplementedHotelServiceServer) GetHotels(*GetHotelsRequest, grpc.ServerStreamingServer[GetHotelsResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method GetHotels not implemented")
 }
-func (UnimplementedHotelServiceServer) GetHotelByID(context.Context, *GetHotelByIDRequest) (*GetHotelByIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetHotelByID not implemented")
+func (UnimplementedHotelServiceServer) GetHotelPriceByID(context.Context, *GetHotelPriceByIDRequest) (*GetHotelPriceByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHotelPriceByID not implemented")
 }
 func (UnimplementedHotelServiceServer) mustEmbedUnimplementedHotelServiceServer() {}
 func (UnimplementedHotelServiceServer) testEmbeddedByValue()                      {}
@@ -122,20 +122,20 @@ func _HotelService_GetHotels_Handler(srv interface{}, stream grpc.ServerStream) 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type HotelService_GetHotelsServer = grpc.ServerStreamingServer[GetHotelsResponse]
 
-func _HotelService_GetHotelByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetHotelByIDRequest)
+func _HotelService_GetHotelPriceByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHotelPriceByIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HotelServiceServer).GetHotelByID(ctx, in)
+		return srv.(HotelServiceServer).GetHotelPriceByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HotelService_GetHotelByID_FullMethodName,
+		FullMethod: HotelService_GetHotelPriceByID_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HotelServiceServer).GetHotelByID(ctx, req.(*GetHotelByIDRequest))
+		return srv.(HotelServiceServer).GetHotelPriceByID(ctx, req.(*GetHotelPriceByIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -148,8 +148,8 @@ var HotelService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*HotelServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetHotelByID",
-			Handler:    _HotelService_GetHotelByID_Handler,
+			MethodName: "GetHotelPriceByID",
+			Handler:    _HotelService_GetHotelPriceByID_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

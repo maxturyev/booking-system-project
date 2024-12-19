@@ -2,6 +2,12 @@ package handlers
 
 import (
 	"context"
+	"io"
+	"log"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/maxturyev/booking-system-project/booking-svc/db"
@@ -9,10 +15,6 @@ import (
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
-	"io"
-	"log"
-	"net/http"
-	"time"
 )
 
 // Bookings is a http.Handler
@@ -93,17 +95,36 @@ func (c *Bookings) PostBooking(ctx *gin.Context) {
 	db.CreateBooking(c.db, booking)
 }
 
-func (c *Bookings) GetHotelPrice(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
+func (c *Bookings) GetHotelPriceByID(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// Context with the amount of time to process the grpc request
+		ctxgrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		log.Println("Grpc connection established")
+		id, _ := strconv.Atoi(ctx.Param("id"))
+		log.Println(id)
+		response, err := grpcClient.GetHotelPriceByID(ctxgrpc, &pb.GetHotelPriceByIDRequest{Id: int32(id)})
+		if err != nil {
+			log.Fatal("error in grpc get price")
+		}
+
+		ctx.JSON(200, gin.H{
+			"hotel price": response.RoomPrice,
+		})
+	}
+}
+
+func (c *Bookings) GetHotels(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Context with the amount of time to process the grpc request
 		ctxgrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		log.Println("Grpc connection established")
+		log.Println("Handle GRPC request to get hotel room price")
 
 		stream, err := grpcClient.GetHotels(ctxgrpc, &pb.GetHotelsRequest{})
 		if err != nil {
-			log.Fatal("error")
+			log.Fatalf("Error setting up a stream %v", err)
 		}
 
 		var hotelList []struct {
@@ -142,8 +163,8 @@ func (c *Bookings) GetHotelPrice(grpcClient pb.HotelServiceClient) gin.HandlerFu
 				Rating:         int(res.Hotel.Rating),
 				Country:        res.Hotel.Country,
 				Description:    res.Hotel.Description,
-				RoomsAvailable: int(res.Hotel.RoomAvaible),
-				Price:          int(res.Hotel.Price),
+				RoomsAvailable: int(res.Hotel.RoomAvailable),
+				Price:          int(res.Hotel.RoomPrice),
 				Address:        res.Hotel.Address,
 			})
 		}
