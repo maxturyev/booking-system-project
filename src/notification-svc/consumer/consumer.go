@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/segmentio/kafka-go"
 	"log"
-	"time"
+
+	"github.com/segmentio/kafka-go"
 )
 
 func main() {
@@ -20,25 +20,22 @@ func main() {
 
 	log.Println("asdasd")
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
-
-	log.Println("readbatch")
-
-	b := make([]byte, 10e3) // 10KB max per message
+	//	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	for {
-		n, err := batch.Read(b)
-		if err != nil {
-			break
+		batch := conn.ReadBatch(1e3, 1e6) // fetch 10KB min, 1MB max
+
+		log.Println("readbatch")
+
+		b := make([]byte, 10e3) // 10KB max per message
+		for {
+			n, err := batch.Read(b)
+			if err != nil {
+				break
+			}
+			fmt.Println(string(b[:n]))
 		}
-		fmt.Println(string(b[:n]))
-	}
-
-	if err := batch.Close(); err != nil {
-		log.Fatal("failed to close batch:", err)
-	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close connection:", err)
+		if err := batch.Close(); err != nil {
+			log.Fatal("failed to close batch:", err)
+		}
 	}
 }
