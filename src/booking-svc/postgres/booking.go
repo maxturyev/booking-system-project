@@ -1,4 +1,4 @@
-package db
+package postgres
 
 import (
 	"errors"
@@ -8,8 +8,9 @@ import (
 )
 
 // CreateBooking creates a booking in the database
-func CreateBooking(db *gorm.DB, booking models.Booking) {
-	db.Create(&booking)
+func CreateBooking(db *gorm.DB, booking models.Booking) error {
+	result := db.Create(&booking)
+	return result.Error
 }
 
 // SelectBookings returns all bookings from the database

@@ -2,26 +2,27 @@ package db
 
 import (
 	"errors"
+
 	"github.com/maxturyev/booking-system-project/hotel-svc/models"
 	"gorm.io/gorm"
-	"log"
 )
 
 // CreateHotel creates a hotel to the database
-func CreateHotel(db *gorm.DB, hotel models.Hotel) {
-	db.Create(&hotel)
+func CreateHotel(db *gorm.DB, hotel models.Hotel) error {
+	result := db.Create(&hotel)
+	return result.Error
 }
 
 // SelectHotels returns all hotels from the database
-func SelectHotels(db *gorm.DB) []models.Hotel {
+func SelectHotels(db *gorm.DB) ([]models.Hotel, error) {
 	var hotel []models.Hotel
 
 	result := db.Find(&hotel)
 	if result.Error != nil {
-		panic("Error")
+		return hotel, result.Error
 	}
 
-	return hotel
+	return hotel, nil
 }
 
 // UpdateHotel updates hotel info in the database
@@ -42,15 +43,15 @@ func UpdateHotel(db *gorm.DB, hotel models.Hotel) error {
 }
 
 // SelectHotelByID returns a hotel from the database by ID
-func SelectHotelByID(db *gorm.DB, id int) models.Hotel {
+func SelectHotelByID(db *gorm.DB, id int) (models.Hotel, error) {
 	var hotel models.Hotel
 
 	result := db.First(&hotel, id)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		log.Println("Запись не найдена")
+		return hotel, result.Error
 	}
 
-	return hotel
+	return hotel, nil
 }
 
 // GetHotelByRating fetches hotels from the database by rating

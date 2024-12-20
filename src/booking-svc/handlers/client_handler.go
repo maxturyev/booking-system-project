@@ -8,7 +8,7 @@ import (
 
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/db"
+	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ func (c *Clients) GetClients(ctx *gin.Context) {
 	c.l.Println("Handle GET clients")
 
 	// fetch the hotels from the database
-	lh := db.SelectClients(c.db)
+	lh := postgres.SelectClients(c.db)
 
 	// serialize the list to JSON
 	ctx.JSON(http.StatusOK, lh)
@@ -45,7 +45,7 @@ func (c *Clients) UpdateClient(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	if err := db.UpdateClient(c.db, client); err != nil {
+	if err := postgres.UpdateClient(c.db, client); err != nil {
 		c.l.Println(err)
 	}
 }
@@ -61,5 +61,5 @@ func (c *Clients) PostClient(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	db.CreateClient(c.db, client)
+	postgres.CreateClient(c.db, client)
 }

@@ -6,18 +6,19 @@ import (
 )
 
 // CreateHotelier creates a hotelier to the database
-func CreateHotelier(db *gorm.DB, hotelier models.Hotelier) {
-	db.Create(&hotelier)
+func CreateHotelier(db *gorm.DB, hotelier models.Hotelier) error {
+	result := db.Create(&hotelier)
+	return result.Error
 }
 
 // SelectHoteliers returns all hoteliers from the database
-func SelectHoteliers(db *gorm.DB) models.Hoteliers {
+func SelectHoteliers(db *gorm.DB) (models.Hoteliers, error) {
 	var hoteliers models.Hoteliers
 
 	result := db.Find(&hoteliers)
 	if result.Error != nil {
-		panic("Error")
+		return hoteliers, result.Error
 	}
 
-	return hoteliers
+	return hoteliers, nil
 }

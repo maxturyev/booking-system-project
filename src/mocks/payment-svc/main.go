@@ -3,76 +3,82 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/joho/godotenv"
-	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
 
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/booking-svc/common"
-	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	pb "github.com/maxturyev/booking-system-project/mocks/grpc"
+	"github.com/maxturyev/booking-system-project/payment-svc/common"
+	"github.com/maxturyev/booking-system-project/payment-svc/db"
+	grpcserver "github.com/maxturyev/booking-system-project/payment-svc/grpc-server"
+	"github.com/maxturyev/booking-system-project/payment-svc/handlers"
 	"google.golang.org/grpc"
-
-	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
-	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
 )
 
-func main() {
-	// Load envs
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+func validateNumericID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
 
+		match, _ := regexp.MatchString(`^\d+$`, id)
+		if !match {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+func main() {
 	// Generate http server config
 	cfg := common.NewConfig()
 
+	fmt.Println(cfg.Server.Host, cfg.Server.Port)
+
 	// Create logger
-	l := log.New(os.Stdout, "booking-svc", log.LstdFlags)
+	l := log.New(os.Stdout, "payment-api", log.LstdFlags)
+
+	fmt.Printf("type is %T\n", l)
 
 	// Connect to database
-	bookingDb := postgres.ConnectDB()
+	hotelDb := db.ConnectDB()
 
-	// Init kafka connection
-	kafkaConn, err := kafka.ConnectKafka()
+	fmt.Printf("type is %T\n", hotelDb)
 
-	// Grpc client server connection
-	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVER_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Println(err)
-	}
+	go func() {
+		// Creating grpc-server
+		lis, err := net.Listen("tcp", ":50052")
+		if err != nil {
+			log.Fatalf("Error starting server: %v", err)
+		}
 
-	defer conn.Close()
+		grpcServer := grpc.NewServer()
+		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
+		log.Println("Grpc server started successfully")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Ошибка запуска сервера: %v", err)
+		}
 
-	grpcClient := pb.NewHotelServiceClient(conn)
+	}()
 
+	fmt.Println("Point 1")
+
+	// Create router and define routes and return that router
 	router := gin.Default()
 
-	bh := handlers.NewBookings(l, bookingDb, kafkaConn)
-	ch := handlers.NewClients(l, bookingDb)
-
-	// Handle requests for booking
-	bookingGroup := router.Group("/booking")
+	onlyH := handlers.NewPayments(l, hotelDb)
+	paymentGroup := router.Group("/payment")
 	{
-		bookingGroup.GET("/", bh.GetBookings)
-		bookingGroup.POST("/", bh.PostBooking)
-		bookingGroup.PUT("/", bh.PutBooking)
-		bookingGroup.GET("/hotel", bh.GetHotels(grpcClient))
-		bookingGroup.GET("/hotel/:id", bh.ValidateNumericID(), bh.GetHotelPriceByID(grpcClient))
-	}
-
-	// Handle requests for client
-	clientGroup := router.Group("/client")
-	{
-		clientGroup.GET("/", ch.GetClients)
-		clientGroup.POST("/", ch.PostClient)
-		clientGroup.PUT("/", ch.UpdateClient)
+		paymentGroup.GET("/", onlyH.ReturnError)
+		// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
+		// paymentGroup.POST("/", onlyH.PostHotel)
 	}
 
 	// Set up a channel to listen to for interrupt signals
@@ -90,7 +96,6 @@ func main() {
 	server := &http.Server{
 		Addr:         cfg.Server.Host + ":" + cfg.Server.Port,
 		Handler:      router,
-		ErrorLog:     l,
 		ReadTimeout:  cfg.Server.Timeout.Read * time.Second,
 		WriteTimeout: cfg.Server.Timeout.Write * time.Second,
 		IdleTimeout:  cfg.Server.Timeout.Idle * time.Second,

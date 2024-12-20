@@ -1,6 +1,7 @@
-package db
+package postgres
 
 import (
+	"errors"
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
 	"gorm.io/gorm"
 	"log"
@@ -25,7 +26,7 @@ func SelectClients(db *gorm.DB) models.Clients {
 
 // UpdateClient updates client info in the database
 func UpdateClient(db *gorm.DB, client models.Client) error {
-	log.Println("entered db update")
+	log.Println("entered postgres update")
 	var existing models.Client
 
 	result := db.First(&existing, client.ClientID)
@@ -39,4 +40,15 @@ func UpdateClient(db *gorm.DB, client models.Client) error {
 	}
 
 	return nil
+}
+
+func SelectClientByID(db *gorm.DB, id int) (models.Client, error) {
+	var client models.Client
+
+	result := db.First(&client, id)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		log.Println("Запись не найдена")
+	}
+
+	return client, result.Error
 }

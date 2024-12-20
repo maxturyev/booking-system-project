@@ -2,7 +2,7 @@ package models
 
 // Client defines the structure for a client API
 type Client struct {
-	ClientID  uint     `gorm:"primaryKey" json:"client_id"`
+	ClientID  int      `gorm:"primaryKey" json:"client_id"`
 	FirstName string   `json:"first_name"`
 	LastName  string   `json:"last_name"`
 	Email     string   `gorm:"uniqueIndex" json:"email"`
