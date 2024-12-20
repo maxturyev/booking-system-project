@@ -2,12 +2,11 @@ FROM golang:1.23.2
 
 WORKDIR /app
 
-COPY src/booking-svc/go.mod src/booking-svc/go.sum ./
-COPY grpc /app/../grpc
+COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY booking-svc/ .
+#COPY booking-svc/ .
 
 RUN go mod tidy
 RUN go build -o booking-svc

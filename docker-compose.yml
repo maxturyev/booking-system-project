@@ -1,38 +1,37 @@
-version: '3.9'
-
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+  hotel-svc:
+    build: ./src/hotel-svc
     ports:
-      - "2181:2181"
-
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    ports:
-      - "9092:9092"
-    depends_on:
-      - zookeeper
-  
-  hotel-db:
-    image: postgres:latest
+      - 9090:9090
+      - 50051:50051
     env_file:
       - ./src/hotel-svc/.env
+    depends_on:
+      - hotel-db
+
+  hotel-db:
+    image: postgres:latest
+    user: postgres
     environment:
-      POSTGRES_USER: ${User}
-      POSTGRES_PASSWORD: ${Password}
-      POSTGRES_DB: ${HotelDB}
+      POSTGRES_USER: ${USER}
+      POSTGRES_PASSWORD: ${PASS}
+      POSTGRES_DB: ${HOTEL_DB}
     ports:
-      - "5433:5433"
+      - 5432:5432
     volumes:
       - hotel-db-data:/var/lib/postgresql/data
+
+  booking-svc:
+    build: ./src/booking-svc
+    ports:
+      - 9091:9091
+      - 50051:50051
+    env_file:
+      - ./src/booking-svc/.env
+    depends_on:
+      - booking-db
+      - kafka
+      - hotel-svc
 
   booking-db:
     image: postgres:latest
@@ -41,50 +40,43 @@ services:
     environment:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASS}
-      POSTGRES_DB: ${DB}
+      POSTGRES_DB: ${BOOKING_DB}
     ports:
-      - "5433:5433"
+      - 5432:5432
     volumes:
       - booking-db-data:/var/lib/postgresql/data
 
-  hotel-svc:
-    build: 
-      context: ./src/hotel-svc
-      dockerfile: dockerfile
-    ports:
-      - "9090:9090"
-      - "50051:50051"
-    env_file:
-      - ./src/hotel-svc/.env
-    depends_on:
-      - hotel-db
-
-  booking-svc:
-    build: 
-      context: ./src/booking-svc
-      dockerfile: dockerfile
-    ports:
-      - "9091:9091"
-    env_file:
-      - ./src/booking-svc/.env
-    depends_on:
-      - booking-db
-      - kafka
-      - hotel-svc
-  
   notification-svc:
-    build: 
-      context: ./src/notification-svc
-      dockerfile: dockerfile
+    build: ./src/notification-svc
     ports:
-      - "9092:9092"
+      - 9092:9092
     depends_on:
       - kafka
+
+  zookeeper:
+    image: bitnami/zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+
+  kafka:
+    image: bitnami/kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
 
 volumes:
   hotel-db-data:
   booking-db-data:
-  
+
 networks:
   default:
     driver: bridge

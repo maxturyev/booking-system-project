@@ -9,7 +9,6 @@ require (
 )
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/maxturyev/booking-system-project/src/grpc v0.0.0
 	github.com/segmentio/kafka-go v0.4.47
 )

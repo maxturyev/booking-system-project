@@ -12,7 +12,7 @@ func ConnectDB() *gorm.DB {
 	// // Load postgres server config
 	// err := godotenv.Load()
 	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
+	// 	log.Fatal("Error loading .env.dev file")
 	// }
 
 	// Initialize connection to Payment database

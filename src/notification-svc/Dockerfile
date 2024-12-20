@@ -2,15 +2,17 @@ FROM golang:1.23.2
 
 WORKDIR /app
 
-COPY src/notifatication-svc/go.mod src/notifatication-svc/go.sum ./
+COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY notifatication-svc/ .
+#COPY notifatication-svc/ .
 
 RUN go mod tidy
 RUN go build -o notifatication-svc
 
 EXPOSE 9092
 
-CMD ["./consumer"]
+ENV KAFKA-BROKER=localhost:9092
+
+CMD ["./notification-svc"]
