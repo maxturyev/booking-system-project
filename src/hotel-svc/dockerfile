@@ -1,0 +1,22 @@
+FROM golang:1.23.2
+
+
+WORKDIR /app
+
+COPY src/hotel-svc/go.mod src/hotel-svc/go.sum ./
+COPY grpc /app/../grpc
+
+RUN go mod download
+
+COPY hotel-svc/ .
+
+RUN go mod tidy
+RUN go build -o hotel-svc
+
+
+EXPOSE 9090
+EXPOSE 50051
+
+ENV KAFKA-BROKER=kafka:9092
+
+CMD [ "./hotel-svc" ]

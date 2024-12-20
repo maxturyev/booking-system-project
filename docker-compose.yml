@@ -1,29 +1,90 @@
-name: booking-system-project
+version: '3.9'
 
 services:
-  hotel-svc:
-    build: ./hotel-svc
-    ports:
-      - 9090:9090
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
     environment:
-      -
-      - "HOTEL_SERVICE_ADDR=localhost:50051"
-
-
-  booking-svc:
-    build: ./booking-svc
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - 9091:9091
-
-  db:
-    image: postgres
-    environment:
-      POSTGRES_DB: hotels_data
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - 5432:5432
-
+      - "2181:2181"
 
   kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+  
+  hotel-db:
+    image: postgres:latest
+    env_file:
+      - ./src/hotel-svc/.env
+    environment:
+      POSTGRES_USER: ${User}
+      POSTGRES_PASSWORD: ${Password}
+      POSTGRES_DB: ${HotelDB}
+    ports:
+      - "5433:5433"
+    volumes:
+      - hotel-db-data:/var/lib/postgresql/data
 
-  notificaticn-svc:
+  booking-db:
+    image: postgres:latest
+    env_file:
+      - ./src/booking-svc/.env
+    environment:
+      POSTGRES_USER: ${USER}
+      POSTGRES_PASSWORD: ${PASS}
+      POSTGRES_DB: ${DB}
+    ports:
+      - "5433:5433"
+    volumes:
+      - booking-db-data:/var/lib/postgresql/data
+
+  hotel-svc:
+    build: 
+      context: ./src/hotel-svc
+      dockerfile: dockerfile
+    ports:
+      - "9090:9090"
+      - "50051:50051"
+    env_file:
+      - ./src/hotel-svc/.env
+    depends_on:
+      - hotel-db
+
+  booking-svc:
+    build: 
+      context: ./src/booking-svc
+      dockerfile: dockerfile
+    ports:
+      - "9091:9091"
+    env_file:
+      - ./src/booking-svc/.env
+    depends_on:
+      - booking-db
+      - kafka
+      - hotel-svc
+  
+  notification-svc:
+    build: 
+      context: ./src/notification-svc
+      dockerfile: dockerfile
+    ports:
+      - "9092:9092"
+    depends_on:
+      - kafka
+
+volumes:
+  hotel-db-data:
+  booking-db-data:
+  
+networks:
+  default:
+    driver: bridge

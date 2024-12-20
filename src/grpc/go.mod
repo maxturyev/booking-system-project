@@ -1,6 +1,6 @@
 module booking-system-project/src/grpc
 
-go 1.22.4
+go 1.23.2
 
 require (
 	google.golang.org/grpc v1.69.0
