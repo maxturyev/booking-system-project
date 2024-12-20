@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/joho/godotenv"
+	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"syscall"
 	"time"
 
@@ -19,24 +19,9 @@ import (
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"google.golang.org/grpc"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/db"
 	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
-	"github.com/segmentio/kafka-go"
+	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
 )
-
-func validateNumericID() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Param("id")
-
-		match, _ := regexp.MatchString(`^\d+$`, id)
-		if !match {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
-}
 
 func main() {
 	// Load envs
@@ -45,17 +30,6 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	// to produce messages
-	topic := "my-topic"
-	partition := 0
-
-	// Init kafka connection
-	kafkaConn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
-	}
-	//kafkaConn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-
 	// Generate http server config
 	cfg := common.NewConfig()
 
@@ -63,7 +37,10 @@ func main() {
 	l := log.New(os.Stdout, "booking-svc", log.LstdFlags)
 
 	// Connect to database
-	bookingDb := db.ConnectDB()
+	bookingDb := postgres.ConnectDB()
+
+	// Init kafka connection
+	kafkaConn, err := kafka.ConnectKafka()
 
 	// Grpc client server connection
 	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVER_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -83,13 +60,11 @@ func main() {
 	// Handle requests for booking
 	bookingGroup := router.Group("/booking")
 	{
-		// Handler to get room price of a hotel by ID
-		bookingGroup.GET("/hotel", bh.GetHotels(grpcClient))
-		bookingGroup.GET("/hotel/:id", validateNumericID(), bh.GetHotelPriceByID(grpcClient))
 		bookingGroup.GET("/", bh.GetBookings)
 		bookingGroup.POST("/", bh.PostBooking)
 		bookingGroup.PUT("/", bh.PutBooking)
-
+		bookingGroup.GET("/hotel", bh.GetHotels(grpcClient))
+		bookingGroup.GET("/hotel/:id", bh.ValidateNumericID(), bh.GetHotelPriceByID(grpcClient))
 	}
 
 	// Handle requests for client

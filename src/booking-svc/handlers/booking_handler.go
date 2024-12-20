@@ -2,19 +2,19 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
+	kafkaGo "github.com/segmentio/kafka-go"
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/maxturyev/booking-system-project/booking-svc/db"
+	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
 	"github.com/maxturyev/booking-system-project/booking-svc/models"
+	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
-	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 )
 
@@ -22,11 +22,11 @@ import (
 type Bookings struct {
 	l  *log.Logger
 	db *gorm.DB
-	kc *kafka.Conn
+	kc *kafkaGo.Conn
 }
 
 // NewBookings creates a bookings handler
-func NewBookings(l *log.Logger, db *gorm.DB, kc *kafka.Conn) *Bookings {
+func NewBookings(l *log.Logger, db *gorm.DB, kc *kafkaGo.Conn) *Bookings {
 	return &Bookings{l, db, kc}
 }
 
@@ -35,7 +35,7 @@ func (b *Bookings) GetBookings(ctx *gin.Context) {
 	b.l.Println("Handle GET bookings")
 
 	// fetch the hotels from the database
-	lh := db.SelectBookings(b.db)
+	lh := postgres.SelectBookings(b.db)
 
 	// serialize the list to JSON
 	ctx.JSON(http.StatusOK, lh)
@@ -52,11 +52,16 @@ func (b *Bookings) PutBooking(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	if err := db.UpdateBooking(b.db, booking); err != nil {
+	// Add booking to database
+	if err := postgres.UpdateBooking(b.db, booking); err != nil {
 		b.l.Println(err)
 	}
 
-	sendKafkaMessage(b.kc, booking)
+	// Send kafka message
+	// Send kafka message
+	if err := kafka.SendMessage(b.kc, booking); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 }
 
 // PostBooking handles a POST request to create a booking
@@ -69,13 +74,34 @@ func (b *Bookings) PostBooking(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&booking); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+
 	// Add booking to database
-	db.CreateBooking(b.db, booking)
+	if err := postgres.CreateBooking(b.db, booking); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 
 	// Send kafka message
-	sendKafkaMessage(b.kc, booking)
+	if err := kafka.SendMessage(b.kc, booking); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 }
 
+// ValidateNumericID makes sure that the id parameter is numeric
+func (b *Bookings) ValidateNumericID() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		match, _ := regexp.MatchString(`^\d+$`, id)
+		if !match {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
+			ctx.Abort()
+			return
+		}
+		ctx.Next()
+	}
+}
+
+// GetHotelPriceByID fetches price of a hotel room from a grpc server (Hotel)
 func (b *Bookings) GetHotelPriceByID(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Context with the amount of time to process the grpc request
@@ -95,6 +121,7 @@ func (b *Bookings) GetHotelPriceByID(grpcClient pb.HotelServiceClient) gin.Handl
 	}
 }
 
+// GetHotels a list of hotels from a grpc server (Hotel)
 func (b *Bookings) GetHotels(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Context with the amount of time to process the grpc request
@@ -153,26 +180,5 @@ func (b *Bookings) GetHotels(grpcClient pb.HotelServiceClient) gin.HandlerFunc {
 		ctx.JSON(200, gin.H{
 			"hotels": hotelList,
 		})
-	}
-}
-
-func sendKafkaMessage(kc *kafka.Conn, booking models.Booking) {
-	// Generate kafka event key
-	requestID := uuid.NewString()
-
-	// Преобразование сообщения в JSON что бы потом отправить через kafka
-	bytes, err := json.Marshal(booking)
-	if err != nil {
-		log.Println(http.StatusInternalServerError, gin.H{"error": "failed to marshal JSON"})
-		return
-	}
-
-	// Kafka message to be sent
-	msg := kafka.Message{Topic: "my-topic", Key: []byte(requestID), Value: bytes}
-
-	// Send message to kafka
-	_, err = kc.WriteMessages(msg)
-	if err != nil {
-		log.Println("failed to write messages:", err)
 	}
 }
