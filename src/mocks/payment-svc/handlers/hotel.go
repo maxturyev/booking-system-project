@@ -27,7 +27,7 @@ func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 
 	variant := rand.Intn(3)
 	if variant < 2 {
-		ctx.JSON(503, gin.H{"error": "Bad news"})
+		ctx.JSON(503, gin.H{"answer": "Bad news"})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"answer": "Good news, everything is fine"})
 	}
