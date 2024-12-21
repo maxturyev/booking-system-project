@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/models"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/models"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/postgres"
 	"gorm.io/gorm"
 )
 

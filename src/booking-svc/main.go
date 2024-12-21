@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/joho/godotenv"
-	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/kafka"
 	"log"
 	"net/http"
 	"os"
@@ -15,12 +15,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/booking-svc/common"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/common"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"google.golang.org/grpc"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
-	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/handlers"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/postgres"
 )
 
 func main() {

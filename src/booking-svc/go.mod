@@ -1,4 +1,4 @@
-module github.com/maxturyev/booking-system-project/booking-svc
+module github.com/maxturyev/booking-system-project/src/booking-svc
 
 go 1.23.2
 
@@ -13,7 +13,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.47
 )
 
-replace github.com/maxturyev/booking-system-project/src/grpc => ../grpc
+replace github.com/maxturyev/booking-system-project/src/grpc => ../../src/grpc
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect

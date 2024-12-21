@@ -14,7 +14,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace github.com/maxturyev/booking-system-project/src/grpc => ../grpc
+replace github.com/maxturyev/booking-system-project/src/grpc => ./../grpc
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect

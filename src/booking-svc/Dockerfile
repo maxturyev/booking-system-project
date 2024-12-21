@@ -1,19 +1,26 @@
-FROM golang:1.23.2
+FROM golang:1.23.2 AS builder
 
-WORKDIR /app
+RUN apt-get update
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+WORKDIR /go/src/app
+COPY . .
+RUN go install
 
-COPY go.mod go.sum ./
+FROM scratch
+COPY --from=builder /go/bin/app .
+ENTRYPOINT ["./app"]
 
-RUN go mod download
+#RUN go mod download
+#
+#RUN go mod tidy
+#RUN go build -o booking-svc
 
-#COPY booking-svc/ .
+#EXPOSE 9091
 
-RUN go mod tidy
-RUN go build -o booking-svc
+#ENV KAFKA-BROKER=localhost:9092
+#ENV HOTEL-SERVER-ADDR=localhost:50051
 
-EXPOSE 9091
-
-ENV KAFKA-BROKER=localhost:9092
-ENV HOTEL-SERVER-ADDR=localhost:50051
-
-CMD ["./booking-svc"]
+#CMD ["./booking-svc"]

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
-	"github.com/maxturyev/booking-system-project/booking-svc/models"
-	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/kafka"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/models"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/postgres"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"gorm.io/gorm"
 )

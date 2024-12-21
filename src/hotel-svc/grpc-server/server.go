@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/maxturyev/booking-system-project/hotel-svc/db"
-	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	pb "github.com/maxturyev/booking-system-project/src/grpc_help"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"

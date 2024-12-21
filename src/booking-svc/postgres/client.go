@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"errors"
-	"github.com/maxturyev/booking-system-project/booking-svc/models"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/models"
 	"gorm.io/gorm"
 	"log"
 )

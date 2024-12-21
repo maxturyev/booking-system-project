@@ -17,7 +17,7 @@ import (
 	"github.com/maxturyev/booking-system-project/hotel-svc/db"
 	grpcserver "github.com/maxturyev/booking-system-project/hotel-svc/grpc-server"
 	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
-	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	pb "github.com/maxturyev/booking-system-project/src/grpc_help"
 	"google.golang.org/grpc"
 )
 

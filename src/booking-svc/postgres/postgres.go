@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/models"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
