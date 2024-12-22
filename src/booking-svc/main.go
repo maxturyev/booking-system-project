@@ -16,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/src/booking-svc/common"
+
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"google.golang.org/grpc"
 

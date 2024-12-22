@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/maxturyev/booking-system-project/hotel-svc/db"
-	pb "github.com/maxturyev/booking-system-project/src/grpc_help"
+	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"

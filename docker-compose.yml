@@ -1,6 +1,8 @@
 services:
   hotel-svc:
-    build: ./src/hotel-svc
+    build:
+      context: .
+      dockerfile: src/hotel-svc/Dockerfile
     ports:
       - 9090:9090
       - 50051:50051
@@ -11,7 +13,6 @@ services:
 
   hotel-db:
     image: postgres:latest
-    user: postgres
     environment:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASS}
@@ -22,7 +23,9 @@ services:
       - hotel-db-data:/var/lib/postgresql/data
 
   booking-svc:
-    build: ./src/booking-svc
+    build:
+      context: .
+      dockerfile: src/booking-svc/Dockerfile
     ports:
       - 9091:9091
       - 50051:50051
@@ -47,7 +50,9 @@ services:
       - booking-db-data:/var/lib/postgresql/data
 
   notification-svc:
-    build: ./src/notification-svc
+    build:
+      context: .
+      dockerfile: src/notification-svc/Dockerfile
     ports:
       - 9092:9092
     depends_on:

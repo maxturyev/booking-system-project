@@ -13,7 +13,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.47
 )
 
-replace github.com/maxturyev/booking-system-project/src/grpc => ../../src/grpc
+replace github.com/maxturyev/booking-system-project/src/grpc => ../grpc
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect

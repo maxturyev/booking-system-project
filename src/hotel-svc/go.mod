@@ -1,4 +1,4 @@
-module github.com/maxturyev/booking-system-project/hotel-svc
+module github.com/maxturyev/booking-system-project/src/hotel-svc
 
 go 1.23.2
 
@@ -14,7 +14,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace github.com/maxturyev/booking-system-project/src/grpc => ./../grpc
+replace github.com/maxturyev/booking-system-project/src/grpc => ../grpc
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect

@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/hotel-svc/common"
-	"github.com/maxturyev/booking-system-project/hotel-svc/db"
-	grpcserver "github.com/maxturyev/booking-system-project/hotel-svc/grpc-server"
-	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
-	pb "github.com/maxturyev/booking-system-project/src/grpc_help"
+	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/common"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/db"
+	grpcserver "github.com/maxturyev/booking-system-project/src/hotel-svc/grpc-server"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/handlers"
 	"google.golang.org/grpc"
 )
 
