@@ -13,7 +13,8 @@ import (
 // ConnectDB establishes a connection to booking database
 func ConnectDB() *gorm.DB {
 	// Initialize connection to Hotels database
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("HOST"), os.Getenv("PORT"), os.Getenv("USER"), os.Getenv("PASS"), os.Getenv("DB"))
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("HOST"),
+		os.Getenv("PORT"), os.Getenv("USER"), os.Getenv("PASS"), os.Getenv("BOOKING_DB"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")

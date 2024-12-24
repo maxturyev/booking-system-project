@@ -12,7 +12,7 @@ func ConnectDB() *gorm.DB {
 	// // Load postgres server config
 	// err := godotenv.Load()
 	// if err != nil {
-	// 	log.Fatal("Error loading .env.dev file")
+	// 	log.Fatal("Error loading .env file")
 	// }
 
 	// Initialize connection to Payment database
@@ -27,7 +27,7 @@ func ConnectDB() *gorm.DB {
 	}
 
 	// // Migrate models to the database as tables
-	// if err := db.AutoMigrate(&models.Hotelier{}, &models.Hotel{}); err != nil {
+	// if err := postgres.AutoMigrate(&models.Hotelier{}, &models.Hotel{}); err != nil {
 	// 	log.Fatalf("Migration failed: %v", err)
 	// }
 

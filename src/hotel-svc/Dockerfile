@@ -22,11 +22,12 @@ FROM golang:1.23.2 AS builder
 WORKDIR /app
 
 COPY src/hotel-svc/go.mod src/hotel-svc/go.sum ./
+COPY src/grpc ../grpc
 RUN go mod download
 
 COPY . /app
 
-WORKDIR /app/src/app1
+WORKDIR /app/src/hotel-svc
 
 RUN go mod tidy
 RUN go build -o hotel-svc main.go

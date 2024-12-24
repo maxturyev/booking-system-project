@@ -33,7 +33,7 @@ func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 	}
 
 	// // fetch the hotels from the database
-	// lh := db.SelectHotels(h.db)
+	// lh := postgres.SelectHotels(h.postgres)
 
 	// // serialize the list to JSON
 	// ctx.JSON(http.StatusOK, lh)
@@ -45,7 +45,7 @@ func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 // 	id, _ := strconv.Atoi(ctx.Param("id"))
 
 // 	// fetch the hotel from the database
-// 	hotel := db.SelectHotelByID(h.db, id)
+// 	hotel := postgres.SelectHotelByID(h.postgres, id)
 
 // 	// serialize the model to JSON
 // 	ctx.JSON(http.StatusOK, hotel)
@@ -63,7 +63,7 @@ func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 // 		return
 // 	}
 
-// 	if err := db.UpdateHotel(h.db, hotel); err != nil {
+// 	if err := postgres.UpdateHotel(h.postgres, hotel); err != nil {
 // 		h.l.Println(err)
 // 	}
 // }
@@ -79,7 +79,7 @@ func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 // 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 // 	}
 
-// 	db.CreateHotel(h.db, hotel)
+// 	postgres.CreateHotel(h.postgres, hotel)
 // }
 
 // // POST upload image

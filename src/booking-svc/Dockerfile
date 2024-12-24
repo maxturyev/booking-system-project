@@ -21,6 +21,7 @@ FROM golang:1.23.2 AS builder
 WORKDIR /app
 
 COPY src/booking-svc/go.mod src/booking-svc/go.sum ./
+COPY src/grpc ../grpc
 RUN go mod download
 
 COPY . /app

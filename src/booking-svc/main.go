@@ -28,7 +28,7 @@ func main() {
 	// Load envs
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env.dev file")
+		log.Fatal("Error loading .env file")
 	}
 
 	// Generate http server config

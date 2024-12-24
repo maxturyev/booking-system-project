@@ -15,9 +15,9 @@ import (
 	"github.com/gin-gonic/gin"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"github.com/maxturyev/booking-system-project/src/hotel-svc/common"
-	"github.com/maxturyev/booking-system-project/src/hotel-svc/db"
 	grpcserver "github.com/maxturyev/booking-system-project/src/hotel-svc/grpc-server"
 	"github.com/maxturyev/booking-system-project/src/hotel-svc/handlers"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/postgres"
 	"google.golang.org/grpc"
 )
 
@@ -45,7 +45,7 @@ func main() {
 	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
 
 	// Connect to database
-	hotelDb := db.ConnectDB()
+	hotelDb := postgres.ConnectDB()
 
 	// Create grpc httpServer
 	grpcServer := grpc.NewServer()
@@ -78,7 +78,7 @@ func main() {
 		hotelGroup.GET("/", hh.GetHotels)
 		hotelGroup.GET("/:id", validateNumericID(), hh.GetHotelByID)
 		hotelGroup.POST("/", hh.PostHotel)
-		hotelGroup.POST("/", hh.HandleUploadImage)
+		hotelGroup.POST("/media", hh.HandleUploadImage)
 	}
 
 	// Handle requests for hotelier

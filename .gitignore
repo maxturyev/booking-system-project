@@ -1,4 +1,4 @@
 .DS_Store
-.env.dev
+src/hotel-svc/.env
 .idea
 .env

@@ -6,8 +6,6 @@ services:
     ports:
       - 9090:9090
       - 50051:50051
-    env_file:
-      - ./src/hotel-svc/.env
     depends_on:
       - hotel-db
 
@@ -20,7 +18,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - hotel-db-data:/var/lib/postgresql/data
+      - hotel-postgres-data:/var/lib/postgresql/data
 
   booking-svc:
     build:
@@ -29,8 +27,6 @@ services:
     ports:
       - 9091:9091
       - 50051:50051
-    env_file:
-      - ./src/booking-svc/.env
     depends_on:
       - booking-db
       - kafka
@@ -38,8 +34,6 @@ services:
 
   booking-db:
     image: postgres:latest
-    env_file:
-      - ./src/booking-svc/.env
     environment:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASS}
@@ -47,7 +41,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - booking-db-data:/var/lib/postgresql/data
+      - booking-postgres-data:/var/lib/postgresql/data
 
   notification-svc:
     build:

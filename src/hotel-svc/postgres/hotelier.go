@@ -1,4 +1,4 @@
-package db
+package postgres
 
 import (
 	"github.com/maxturyev/booking-system-project/src/hotel-svc/models"
