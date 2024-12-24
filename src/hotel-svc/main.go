@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/joho/godotenv"
 	"log"
 	"net"
 	"net/http"
@@ -38,6 +39,12 @@ func validateNumericID() gin.HandlerFunc {
 const port = ":50051"
 
 func main() {
+	// Load envs
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Generate httpServer config
 	cfg := common.NewConfig()
 

@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 
@@ -11,17 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// ConnectDB establishes a connection to hotels database
+// ConnectDB establishes a connection to Hotels database
 func ConnectDB() *gorm.DB {
-	// Load postgres server config
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	// Initialize connection to Hotels database
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("Host"),
-		os.Getenv("Port"), os.Getenv("User"), os.Getenv("Password"), os.Getenv("HotelDB"))
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("HOST"),
+		os.Getenv("PORT"), os.Getenv("USER"), os.Getenv("PASS"), os.Getenv("HOTEL_DB"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
