@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/joho/godotenv"
-	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
 
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -24,28 +24,31 @@ import (
 )
 
 func main() {
-	// Load envs
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// // Load envs
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	// Generate http server config
 	cfg := common.NewConfig()
 
 	// Create logger
-	l := log.New(os.Stdout, "booking-svc", log.LstdFlags)
+	l := log.New(os.Stdout, "booking-svc\t", log.LstdFlags)
 
 	// Connect to database
 	bookingDb := postgres.ConnectDB()
 
 	// Init kafka connection
 	kafkaConn, err := kafka.ConnectKafka()
+	if err != nil {
+		l.Println("first:", err)
+	}
 
 	// Grpc client server connection
-	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVER_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVICE_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Println(err)
+		l.Println("second:", err)
 	}
 
 	defer conn.Close()
