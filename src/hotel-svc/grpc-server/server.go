@@ -20,7 +20,7 @@ type HotelServer struct {
 // GetHotels lists hotels from the database
 func (s *HotelServer) GetHotels(req *pb.GetHotelsRequest, stream pb.HotelService_GetHotelsServer) error {
 	log.Println("GetHotels запрос получен")
-	hotels := db.SelectHotels(s.DB)
+	hotels, _ := db.SelectHotels(s.DB)
 	for _, hotel := range hotels {
 		response := &pb.GetHotelsResponse{
 			Hotel: &pb.Hotel{
@@ -45,7 +45,7 @@ func (s *HotelServer) GetHotels(req *pb.GetHotelsRequest, stream pb.HotelService
 func (s *HotelServer) GetHotelPriceByID(ctx context.Context, req *pb.GetHotelPriceByIDRequest) (*pb.GetHotelPriceByIDResponse, error) {
 	log.Println("Get ID")
 	hotelID := req.GetId()
-	hotel := db.SelectHotelByID(s.DB, int(hotelID))
+	hotel, _ := db.SelectHotelByID(s.DB, int(hotelID))
 	response := &pb.GetHotelPriceByIDResponse{RoomPrice: hotel.RoomPrice}
 	return response, nil
 }

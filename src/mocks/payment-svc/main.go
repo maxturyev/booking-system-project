@@ -43,7 +43,7 @@ func main() {
 	fmt.Println(cfg.Server.Host, cfg.Server.Port)
 
 	// Create logger
-	l := log.New(os.Stdout, "payment-api", log.LstdFlags)
+	l := log.New(os.Stdout, "payment-svc", log.LstdFlags)
 
 	fmt.Printf("type is %T\n", l)
 
