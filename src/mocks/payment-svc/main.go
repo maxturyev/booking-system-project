@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	pb "github.com/maxturyev/booking-system-project/mocks/grpc"
 	"github.com/maxturyev/booking-system-project/payment-svc/common"
 	"github.com/maxturyev/booking-system-project/payment-svc/db"
@@ -37,20 +38,20 @@ func validateNumericID() gin.HandlerFunc {
 }
 
 func main() {
+	// Load postgres server config
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Generate http server config
 	cfg := common.NewConfig()
-
-	fmt.Println(cfg.Server.Host, cfg.Server.Port)
 
 	// Create logger
 	l := log.New(os.Stdout, "payment-svc", log.LstdFlags)
 
-	fmt.Printf("type is %T\n", l)
-
 	// Connect to database
 	hotelDb := db.ConnectDB()
-
-	fmt.Printf("type is %T\n", hotelDb)
 
 	go func() {
 		// Creating grpc-server
@@ -128,5 +129,4 @@ func main() {
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
-
 }

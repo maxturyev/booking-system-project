@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/joho/godotenv"
 	"log"
 	"net"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"regexp"
 	"syscall"
 	"time"
+
+	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/hotel-svc/common"
@@ -49,7 +50,7 @@ func main() {
 	cfg := common.NewConfig()
 
 	// Create logger
-	l := log.New(os.Stdout, "hotel-api", log.LstdFlags)
+	l := log.New(os.Stdout, "hotel-svc", log.LstdFlags)
 
 	// Connect to database
 	hotelDb := db.ConnectDB()
