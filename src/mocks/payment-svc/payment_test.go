@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAdd(t *testing.T) {
+func TestPaymentGet(t *testing.T) {
 	resp, err := http.Get("http://127.0.0.1:9095/payment/")
 	if err != nil {
 		log.Println(err)
