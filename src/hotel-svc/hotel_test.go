@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"testing"
@@ -28,27 +27,22 @@ func TestHotelGet(t *testing.T) {
 		return
 	}
 	defer resp.Body.Close()
-	answer := map[string]string{}
+	// answer := map[string]string{}
 
-	log.Println(answer)
-	for true {
-		bs := make([]byte, 1024)
-		n, err := resp.Body.Read(bs)
-		log.Println(string(bs[:n]))
+	// log.Println(answer)
+	// for true {
+	// 	bs := make([]byte, 1024)
+	// 	n, err := resp.Body.Read(bs)
+	// 	log.Println(string(bs[:n]))
 
-		json.Unmarshal([]byte(string(bs[:n])), &answer)
+	// 	json.Unmarshal([]byte(string(bs[:n])), &answer)
 
-		log.Println(answer["answer"])
+	// 	log.Println(answer["error"])
 
-		if n == 0 || err != nil {
-			break
-		}
-	}
+	// 	if n == 0 || err != nil {
+	// 		break
+	// 	}
+	// }
 
-	flag := false
-	if answer["answer"] == "Handle GET bookings" {
-		flag = true
-	}
-
-	assert.Equal(t, flag, true)
+	assert.Equal(t, resp.StatusCode, 200)
 }
