@@ -46,3 +46,15 @@ func TestHotelGet(t *testing.T) {
 
 	assert.Equal(t, resp.StatusCode, 200)
 }
+
+func TestHotelierGet(t *testing.T) {
+	resp, err := http.Get("http://127.0.0.1:9090/hotelier/")
+	if err != nil {
+		log.Println(err)
+		assert.Equal(t, false, true)
+		return
+	}
+	defer resp.Body.Close()
+
+	assert.Equal(t, resp.StatusCode, 200)
+}

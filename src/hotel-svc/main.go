@@ -84,7 +84,7 @@ func main() {
 		hotelGroup.GET("/", hh.GetHotels)
 		hotelGroup.GET("/:id", validateNumericID(), hh.GetHotelByID)
 		hotelGroup.POST("/", hh.PostHotel)
-		hotelGroup.POST("/", hh.HandleUploadImage)
+		hotelGroup.POST("/media", hh.HandleUploadImage)
 	}
 
 	// Handle requests for hotelier
