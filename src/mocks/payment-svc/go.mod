@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/joho/godotenv v1.5.1
 	github.com/maxturyev/booking-system-project/mocks/grpc v0.0.0-20241219172138-32e01348461c
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.69.2
