@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -14,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	pb "github.com/maxturyev/booking-system-project/mocks/grpc"
 	"github.com/maxturyev/booking-system-project/payment-svc/common"
 	"github.com/maxturyev/booking-system-project/payment-svc/db"
@@ -38,17 +36,17 @@ func validateNumericID() gin.HandlerFunc {
 }
 
 func main() {
-	// Load postgres server config
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// // Load postgres server config
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	// Generate http server config
 	cfg := common.NewConfig()
 
 	// Create logger
-	l := log.New(os.Stdout, "payment-svc", log.LstdFlags)
+	l := log.New(os.Stdout, "payment-svc\t", log.LstdFlags)
 
 	// Connect to database
 	hotelDb := db.ConnectDB()
@@ -57,19 +55,17 @@ func main() {
 		// Creating grpc-server
 		lis, err := net.Listen("tcp", ":50052")
 		if err != nil {
-			log.Fatalf("Error starting server: %v", err)
+			l.Fatalf("Error starting server: %v", err)
 		}
 
 		grpcServer := grpc.NewServer()
 		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
-		log.Println("Grpc server started successfully")
+		l.Println("Grpc server started successfully")
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Ошибка запуска сервера: %v", err)
+			l.Fatalf("Ошибка запуска сервера: %v", err)
 		}
 
 	}()
-
-	fmt.Println("Point 1")
 
 	// Create router and define routes and return that router
 	router := gin.Default()
@@ -106,7 +102,7 @@ func main() {
 	signal.Notify(runChan, os.Interrupt, syscall.SIGTSTP)
 
 	// Alert the user that the server is starting
-	log.Printf("Server is starting on %s\n", server.Addr)
+	l.Printf("Server is starting on %s\n", server.Addr)
 
 	// Run the server on a new goroutine
 	go func() {
@@ -125,8 +121,8 @@ func main() {
 
 	// If we get one of the pre-prescribed syscalls, gracefully terminate the server
 	// while alerting the user
-	log.Printf("Server is shutting down due to %+v\n", interrupt)
+	l.Printf("Server is shutting down due to %+v\n", interrupt)
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
+		l.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
 }

@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/joho/godotenv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/hotel-svc/common"
 	"github.com/maxturyev/booking-system-project/hotel-svc/db"
@@ -40,11 +38,11 @@ func validateNumericID() gin.HandlerFunc {
 const port = ":50051"
 
 func main() {
-	// Load envs
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// // Load envs
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	// Generate httpServer config
 	cfg := common.NewConfig()
@@ -139,7 +137,7 @@ func main() {
 
 	// If we get one of the pre-prescribed syscalls, gracefully terminate the httpServer
 	// while alerting the user
-	log.Printf("Server is shutting down due to %+v\n", interrupt)
+	l.Printf("Server is shutting down due to %+v\n", interrupt)
 	if err := httpServer.Shutdown(ctx); err != nil {
 		l.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
