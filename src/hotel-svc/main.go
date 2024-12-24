@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/joho/godotenv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/hotel-svc/common"
 	"github.com/maxturyev/booking-system-project/hotel-svc/db"
@@ -40,17 +38,17 @@ func validateNumericID() gin.HandlerFunc {
 const port = ":50051"
 
 func main() {
-	// Load envs
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// // Load envs
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	// Generate httpServer config
 	cfg := common.NewConfig()
 
 	// Create logger
-	l := log.New(os.Stdout, "hotel-svc", log.LstdFlags)
+	l := log.New(os.Stdout, "hotel-svc\t", log.LstdFlags)
 
 	// Connect to database
 	hotelDb := db.ConnectDB()
@@ -62,14 +60,14 @@ func main() {
 	go func() {
 		lis, err := net.Listen("tcp", port)
 		if err != nil {
-			log.Fatalf("failed to create listener: %s", err)
+			l.Fatalf("failed to create listener: %s", err)
 		}
 
 		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
 
 		log.Printf("Grpc httpServer started  on port %s", port)
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Ошибка запуска сервера: %v", err)
+			l.Fatalf("Ошибка запуска сервера: %v", err)
 		}
 	}()
 
@@ -120,7 +118,7 @@ func main() {
 	signal.Notify(runChan, os.Interrupt, syscall.SIGTSTP)
 
 	// Alert the user that the httpServer is starting
-	log.Printf("Server is starting on %s\n", httpServer.Addr)
+	l.Printf("Server is starting on %s\n", httpServer.Addr)
 
 	// Run the http httpServer on a new goroutine
 	go func() {
@@ -128,7 +126,7 @@ func main() {
 			if errors.Is(err, http.ErrServerClosed) {
 				// Normal interrupt operation, ignore
 			} else {
-				log.Fatalf("Server failed to start due to err: %v", err)
+				l.Fatalf("Server failed to start due to err: %v", err)
 			}
 		}
 	}()
@@ -139,9 +137,9 @@ func main() {
 
 	// If we get one of the pre-prescribed syscalls, gracefully terminate the httpServer
 	// while alerting the user
-	log.Printf("Server is shutting down due to %+v\n", interrupt)
+	l.Printf("Server is shutting down due to %+v\n", interrupt)
 	if err := httpServer.Shutdown(ctx); err != nil {
-		log.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
+		l.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
 
 }
