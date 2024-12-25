@@ -7,7 +7,6 @@ import (
 	"math/rand"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gorm.io/gorm"
 )
 
@@ -32,18 +31,6 @@ func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"answer": "Good news, everything is fine"})
 	}
-
-	// // fetch the hotels from the database
-	// lh := db.SelectHotels(h.db)
-
-	// // serialize the list to JSON
-	// ctx.JSON(http.StatusOK, lh)
-}
-
-func (h *HandlerPayments) DoPrometeus(ctx *gin.Context) {
-	h.l.Println("Prometeus:")
-
-	ctx.JSON(http.StatusOK, promhttp.Handler())
 
 	// // fetch the hotels from the database
 	// lh := db.SelectHotels(h.db)
