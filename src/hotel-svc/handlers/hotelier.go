@@ -6,8 +6,8 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/hotel-svc/db"
-	"github.com/maxturyev/booking-system-project/hotel-svc/models"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/models"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/postgres"
 	"gorm.io/gorm"
 )
 
@@ -27,7 +27,7 @@ func (h *Hoteliers) GetHoteliers(ctx *gin.Context) {
 	h.l.Println("Handle GET Hoteliers")
 
 	// fetch the hoteliers from the database
-	lh, err := db.SelectHoteliers(h.db)
+	lh, err := postgres.SelectHoteliers(h.db)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, nil)
 	}
@@ -49,7 +49,7 @@ func (h *Hoteliers) PostHotelier(ctx *gin.Context) {
 	if res == false {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Not correct field"})
 	}
-	err := db.CreateHotelier(h.db, hotelier)
+	err := postgres.CreateHotelier(h.db, hotelier)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}

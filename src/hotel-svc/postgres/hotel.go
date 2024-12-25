@@ -1,9 +1,9 @@
-package db
+package postgres
 
 import (
 	"errors"
 
-	"github.com/maxturyev/booking-system-project/hotel-svc/models"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/models"
 	"gorm.io/gorm"
 )
 

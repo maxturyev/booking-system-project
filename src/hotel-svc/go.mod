@@ -1,4 +1,4 @@
-module github.com/maxturyev/booking-system-project/hotel-svc
+module github.com/maxturyev/booking-system-project/src/hotel-svc
 
 go 1.23.2
 

@@ -1,29 +1,89 @@
-name: booking-system-project
-
 services:
   hotel-svc:
-    build: ./hotel-svc
+    build:
+      context: .
+      dockerfile: src/hotel-svc/Dockerfile
+    image: booking-system/hotel
+    container_name: hotel
     ports:
-      - 9090:9090
-    environment:
-      -
-      - "HOTEL_SERVICE_ADDR=localhost:50051"
+      - "9090:9090"
+      - "50051:50051"
+    depends_on:
+      - hotel-db
 
+  hotel-db:
+    image: postgres:latest
+    container_name: hotel-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${HOTEL_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - hotel-postgres-data:/var/lib/postgresql/data
 
   booking-svc:
-    build: ./booking-svc
-    ports:
-      - 9091:9091
-
-  db:
-    image: postgres
+    build:
+      context: .
+      dockerfile: src/booking-svc/Dockerfile
+    image: booking-system/booking
+    container_name: booking
     environment:
-      POSTGRES_DB: hotels_data
-      POSTGRES_PASSWORD: postgres
+      HOTEL_SERVICE_ADDR: ${HOTEL_SERVICE_ADDR}
+      KAFKA_SERVER_ADDR: ${KAFKA_SERVER_ADDR}
     ports:
-      - 5432:5432
+      - "9091:9091"
+      - "50052:50051"
+    depends_on:
+      - booking-db
+      - kafka
+      - hotel-svc
 
+  booking-db:
+    image: postgres:latest
+    container_name: booking-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${BOOKING_DB}
+    ports:
+      - "5434:5432"
+    volumes:
+      - booking-postgres-data:/var/lib/postgresql/data
+
+  notification-svc:
+    build:
+      context: .
+      dockerfile: src/notification-svc/Dockerfile
+    image: booking-system/notification
+    container_name: notification
+    environment:
+      KAFKA_SERVER_ADDR: ${KAFKA_SERVER_ADDR}
+    depends_on:
+      - kafka
 
   kafka:
+    image: 'bitnami/kafka:latest'
+    container_name: kafka
+    ports:
+      - '9092:9092'
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
 
-  notificaticn-svc:
+volumes:
+  hotel-postgres-data:
+  booking-postgres-data:
+  kafka_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

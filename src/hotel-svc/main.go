@@ -12,14 +12,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/hotel-svc/common"
-	"github.com/maxturyev/booking-system-project/hotel-svc/db"
-	grpcserver "github.com/maxturyev/booking-system-project/hotel-svc/grpc-server"
-	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
-	pb "github.com/maxturyev/booking-system-project/src/grpc"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
+
+	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/common"
+	grpcserver "github.com/maxturyev/booking-system-project/src/hotel-svc/grpc-server"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/handlers"
+	"github.com/maxturyev/booking-system-project/src/hotel-svc/postgres"
 )
 
 var (
@@ -93,7 +94,7 @@ func main() {
 	l := log.New(os.Stdout, "hotel-svc\t", log.LstdFlags)
 
 	// Connect to database
-	hotelDb := db.ConnectDB()
+	hotelDb := postgres.ConnectDB()
 
 	// Create grpc httpServer
 	grpcServer := grpc.NewServer()
@@ -125,6 +126,7 @@ func main() {
 	// Handle requests for hotel
 	hotelGroup := router.Group("/hotel")
 	{
+
 		hotelGroup.GET("/", handlerHotelPrometheus(), hh.GetHotels)
 		hotelGroup.GET("/:id", handlerHotelPrometheus(), handlers.ValidateNumericID(), hh.GetHotelByID)
 		hotelGroup.POST("/", handlerHotelPrometheus(), hh.PostHotel)

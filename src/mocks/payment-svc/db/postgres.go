@@ -21,7 +21,7 @@ func ConnectDB() *gorm.DB {
 	}
 
 	// // Migrate models to the database as tables
-	// if err := db.AutoMigrate(&models.Hotelier{}, &models.Hotel{}); err != nil {
+	// if err := postgres.AutoMigrate(&models.Hotelier{}, &models.Hotel{}); err != nil {
 	// 	log.Fatalf("Migration failed: %v", err)
 	// }
 

@@ -10,19 +10,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/gin-gonic/gin"
-	"github.com/maxturyev/booking-system-project/booking-svc/common"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/common"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/handlers"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/kafka"
+	"github.com/maxturyev/booking-system-project/src/booking-svc/postgres"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
-	"google.golang.org/grpc"
-
-	"github.com/maxturyev/booking-system-project/booking-svc/handlers"
-	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
 )
 
 var (

@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
+	"os"
 )
 
 const (
-	KafkaTopic         = "bookings"
-	KafkaServerAddress = "localhost:9092"
+	KafkaTopic = "bookings"
 )
 
 func main() {
 	// to consume messages
-	address := KafkaServerAddress
+	address := os.Getenv("KAFKA_SERVER_ADDR")
 	topic := KafkaTopic
 	partition := 0
 
@@ -22,13 +22,9 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to dial leader:", err)
 	}
-	log.Println("asdasd")
-
-	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 
 	for {
 		batch := conn.ReadBatch(1e3, 1e6) // fetch 10KB min, 1MB max
-		log.Println("readbatch")
 
 		b := make([]byte, 10e3) // 10KB max per message
 		for {
