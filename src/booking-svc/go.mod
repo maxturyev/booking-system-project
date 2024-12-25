@@ -59,7 +59,6 @@ require (
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/joho/godotenv v1.5.1
 	golang.org/x/text v0.19.0 // indirect
 	google.golang.org/grpc v1.69.0
 	gorm.io/driver/postgres v1.5.11
