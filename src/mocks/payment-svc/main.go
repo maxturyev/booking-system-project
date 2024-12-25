@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"syscall"
 	"time"
 
@@ -18,29 +17,38 @@ import (
 	"github.com/maxturyev/booking-system-project/payment-svc/db"
 	grpcserver "github.com/maxturyev/booking-system-project/payment-svc/grpc-server"
 	"github.com/maxturyev/booking-system-project/payment-svc/handlers"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 )
 
-func validateNumericID() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Param("id")
+var (
+	requestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+	requestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds",
+			Help: "Duration of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+)
 
-		match, _ := regexp.MatchString(`^\d+$`, id)
-		if !match {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
-			c.Abort()
-			return
-		}
-		c.Next()
+func handlerPaymentGetPrometheus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		elapsed := time.Since(start).Seconds()
+		requestsTotal.WithLabelValues("GET").Inc()
+		requestDuration.WithLabelValues("GET").Observe(elapsed)
 	}
 }
 
 func main() {
-	// // Load postgres server config
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	prometheus.MustRegister(requestsTotal, requestDuration)
 
 	// Generate http server config
 	cfg := common.NewConfig()
@@ -64,7 +72,6 @@ func main() {
 		if err := grpcServer.Serve(lis); err != nil {
 			l.Fatalf("Ошибка запуска сервера: %v", err)
 		}
-
 	}()
 
 	// Create router and define routes and return that router
@@ -73,7 +80,7 @@ func main() {
 	onlyH := handlers.NewPayments(l, hotelDb)
 	paymentGroup := router.Group("/payment")
 	{
-		paymentGroup.GET("/", onlyH.ReturnError)
+		paymentGroup.GET("/", handlerPaymentGetPrometheus(), onlyH.ReturnError)
 		// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
 		// paymentGroup.POST("/", onlyH.PostHotel)
 	}
