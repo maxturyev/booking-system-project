@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -9,18 +10,11 @@ import (
 
 // ConnectDB establishes a connection to hotels database
 func ConnectDB() *gorm.DB {
-	// // Load postgres server config
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
-
 	// Initialize connection to Payment database
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", "localhost",
-		"5433", "postgres", "password123", "database")
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s",
+		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"), os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"), os.Getenv("BOOKING_DB"))
 
-	// dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Getenv("Host"),
-	// 	os.Getenv("Port"), os.Getenv("User"), os.Getenv("Password"), os.Getenv("HotelDB"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")

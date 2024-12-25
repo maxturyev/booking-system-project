@@ -3,13 +3,11 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"syscall"
 	"time"
 
@@ -19,66 +17,84 @@ import (
 	"github.com/maxturyev/booking-system-project/payment-svc/db"
 	grpcserver "github.com/maxturyev/booking-system-project/payment-svc/grpc-server"
 	"github.com/maxturyev/booking-system-project/payment-svc/handlers"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
-func validateNumericID() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Param("id")
+var (
+	requestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+	requestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds",
+			Help: "Duration of HTTP requests.",
+		},
+		[]string{"method"},
+	)
+)
 
-		match, _ := regexp.MatchString(`^\d+$`, id)
-		if !match {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
-			c.Abort()
-			return
-		}
-		c.Next()
+func handlerPaymentPrometheus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		start := time.Now()
+		elapsed := time.Since(start).Seconds()
+		requestsTotal.WithLabelValues(method).Inc()
+		requestDuration.WithLabelValues(method).Observe(elapsed)
 	}
 }
 
+func prometheusView() gin.HandlerFunc {
+	h := promhttp.Handler()
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+const PORT = ":50052"
+
 func main() {
+	// Обработка Прометея
+	prometheus.MustRegister(requestsTotal, requestDuration)
+
 	// Generate http server config
 	cfg := common.NewConfig()
 
-	fmt.Println(cfg.Server.Host, cfg.Server.Port)
-
 	// Create logger
-	l := log.New(os.Stdout, "payment-api", log.LstdFlags)
-
-	fmt.Printf("type is %T\n", l)
+	l := log.New(os.Stdout, "payment-svc\t", log.LstdFlags)
 
 	// Connect to database
 	hotelDb := db.ConnectDB()
 
-	fmt.Printf("type is %T\n", hotelDb)
-
 	go func() {
 		// Creating grpc-server
-		lis, err := net.Listen("tcp", ":50052")
+		lis, err := net.Listen("tcp", PORT)
 		if err != nil {
-			log.Fatalf("Error starting server: %v", err)
+			l.Fatalf("Error starting server: %v", err)
 		}
 
 		grpcServer := grpc.NewServer()
 		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
-		log.Println("Grpc server started successfully")
+		l.Println("Grpc server started successfully")
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Ошибка запуска сервера: %v", err)
+			l.Fatalf("Ошибка запуска сервера: %v", err)
 		}
-
 	}()
-
-	fmt.Println("Point 1")
 
 	// Create router and define routes and return that router
 	router := gin.Default()
 
+	router.GET("/metrics", prometheusView())
+
 	onlyH := handlers.NewPayments(l, hotelDb)
 	paymentGroup := router.Group("/payment")
 	{
-		paymentGroup.GET("/", onlyH.ReturnError)
-		// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
-		// paymentGroup.POST("/", onlyH.PostHotel)
+		paymentGroup.GET("/", handlerPaymentPrometheus(), onlyH.ReturnError)
 	}
 
 	// Set up a channel to listen to for interrupt signals
@@ -105,7 +121,7 @@ func main() {
 	signal.Notify(runChan, os.Interrupt, syscall.SIGTSTP)
 
 	// Alert the user that the server is starting
-	log.Printf("Server is starting on %s\n", server.Addr)
+	l.Printf("Server is starting on %s\n", server.Addr)
 
 	// Run the server on a new goroutine
 	go func() {
@@ -124,9 +140,8 @@ func main() {
 
 	// If we get one of the pre-prescribed syscalls, gracefully terminate the server
 	// while alerting the user
-	log.Printf("Server is shutting down due to %+v\n", interrupt)
+	l.Printf("Server is shutting down due to %+v\n", interrupt)
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
+		l.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
-
 }
