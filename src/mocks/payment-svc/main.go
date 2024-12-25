@@ -48,6 +48,13 @@ func handlerPaymentGetPrometheus() gin.HandlerFunc {
 	}
 }
 
+func prometheusHandler() gin.HandlerFunc {
+	h := promhttp.Handler()
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
 func main() {
 	// Обработка Прометея
 	prometheus.MustRegister(requestsTotal, requestDuration)
@@ -86,15 +93,17 @@ func main() {
 	// Create router and define routes and return that router
 	router := gin.Default()
 
+	router.GET("/metrics", prometheusHandler())
+
 	onlyH := handlers.NewPayments(l, hotelDb)
-	metricsH := handlers.NewPayments(l, hotelDb)
-	metricsGroup := router.Group("/metrics")
-	{
-		// paymentGroup.GET("/metrics", promhttp.Handler(), onlyH.ReturnError)
-		metricsGroup.GET("/", metricsH.DoPrometeus)
-		// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
-		// paymentGroup.POST("/", onlyH.PostHotel)
-	}
+	// metricsH := handlers.NewPayments(l, hotelDb)
+	// metricsGroup := router.Group("/metrics")
+	// {
+	// 	// paymentGroup.GET("/metrics", promhttp.Handler(), onlyH.ReturnError)
+	// 	metricsGroup.GET("/", metricsH.DoPrometeus)
+	// 	// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
+	// 	// paymentGroup.POST("/", onlyH.PostHotel)
+	// }
 	paymentGroup := router.Group("/payment")
 	{
 		// paymentGroup.GET("/metrics", promhttp.Handler(), onlyH.ReturnError)
