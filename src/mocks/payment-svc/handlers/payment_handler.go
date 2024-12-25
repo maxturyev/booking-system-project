@@ -10,18 +10,18 @@ import (
 	"gorm.io/gorm"
 )
 
-// Hotels is a http.Handler
+// HandlerPayments is a http.Handler
 type HandlerPayments struct {
 	l  *log.Logger
 	db *gorm.DB
 }
 
-// NewHotels creates a hotels handler
+// NewPayments creates a hotels handler
 func NewPayments(l *log.Logger, db *gorm.DB) *HandlerPayments {
 	return &HandlerPayments{l, db}
 }
 
-// GetHotels handles GET request to list all hotels
+// ReturnError handles GET request to get 500 or 200 http error
 func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 	h.l.Println("Now is some error 5xx")
 
@@ -31,10 +31,4 @@ func (h *HandlerPayments) ReturnError(ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"answer": "Good news, everything is fine"})
 	}
-
-	// // fetch the hotels from the database
-	// lh := db.SelectHotels(h.db)
-
-	// // serialize the list to JSON
-	// ctx.JSON(http.StatusOK, lh)
 }
