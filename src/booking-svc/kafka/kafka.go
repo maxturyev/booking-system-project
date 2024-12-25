@@ -17,7 +17,7 @@ const KafkaTopic = "bookings"
 // ConnectKafka establishes a connection to kafka
 func ConnectKafka() (*kafka.Conn, error) {
 	// Setting up a kafka producer
-	address := os.Getenv("KAFKA_ADDRESS")
+	address := os.Getenv("KAFKA_SERVER_ADDR")
 	topic := KafkaTopic
 	partition := 0
 

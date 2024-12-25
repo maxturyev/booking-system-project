@@ -3,20 +3,23 @@ services:
     build:
       context: .
       dockerfile: src/hotel-svc/Dockerfile
+    image: booking-system/hotel
+    container_name: hotel
     ports:
-      - 9090:9090
-      - 50051:50051
+      - "9090:9090"
+      - "50051:50051"
     depends_on:
       - hotel-db
 
   hotel-db:
     image: postgres:latest
+    container_name: hotel-db
     environment:
-      POSTGRES_USER: ${USER}
-      POSTGRES_PASSWORD: ${PASS}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${HOTEL_DB}
     ports:
-      - 5432:5432
+      - "5433:5432"
     volumes:
       - hotel-postgres-data:/var/lib/postgresql/data
 
@@ -24,9 +27,14 @@ services:
     build:
       context: .
       dockerfile: src/booking-svc/Dockerfile
+    image: booking-system/booking
+    container_name: booking
+    environment:
+      HOTEL_SERVICE_ADDR: ${HOTEL_SERVICE_ADDR}
+      KAFKA_SERVER_ADDR: ${KAFKA_SERVER_ADDR}
     ports:
-      - 9091:9091
-      - 50051:50051
+      - "9091:9091"
+      - "50052:50051"
     depends_on:
       - booking-db
       - kafka
@@ -34,12 +42,13 @@ services:
 
   booking-db:
     image: postgres:latest
+    container_name: booking-db
     environment:
-      POSTGRES_USER: ${USER}
-      POSTGRES_PASSWORD: ${PASS}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${BOOKING_DB}
     ports:
-      - 5432:5432
+      - "5434:5432"
     volumes:
       - booking-postgres-data:/var/lib/postgresql/data
 
@@ -47,34 +56,33 @@ services:
     build:
       context: .
       dockerfile: src/notification-svc/Dockerfile
-    ports:
-      - 9092:9092
+    image: booking-system/notification
+    container_name: notification
+    environment:
+      KAFKA_SERVER_ADDR: ${KAFKA_SERVER_ADDR}
     depends_on:
       - kafka
 
-  zookeeper:
-    image: bitnami/zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 2181:2181
-
   kafka:
-    image: bitnami/kafka
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    image: 'bitnami/kafka:latest'
+    container_name: kafka
     ports:
-      - 9092:9092
-    depends_on:
-      - zookeeper
+      - '9092:9092'
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
 
 volumes:
-  hotel-db-data:
-  booking-db-data:
+  hotel-postgres-data:
+  booking-postgres-data:
+  kafka_data:
+    driver: local
 
 networks:
   default:

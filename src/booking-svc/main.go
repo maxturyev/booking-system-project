@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/joho/godotenv"
 	"github.com/maxturyev/booking-system-project/src/booking-svc/kafka"
 	"log"
 	"net/http"
@@ -25,12 +24,6 @@ import (
 )
 
 func main() {
-	// Load envs
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	// Generate http server config
 	cfg := common.NewConfig()
 
@@ -44,7 +37,7 @@ func main() {
 	kafkaConn, err := kafka.ConnectKafka()
 
 	// Grpc client server connection
-	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVER_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(os.Getenv("HOTEL_SERVICE_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Println(err)
 	}

@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
+	"os"
 )
 
 const (
-	KafkaTopic         = "bookings"
-	KafkaServerAddress = "localhost:9092"
+	KafkaTopic = "bookings"
 )
 
 func main() {
 	// to consume messages
-	address := KafkaServerAddress
+	address := os.Getenv("KAFKA_SERVER_ADDR")
 	topic := KafkaTopic
 	partition := 0
 

@@ -35,8 +35,6 @@ func validateNumericID() gin.HandlerFunc {
 	}
 }
 
-const port = ":50051"
-
 func main() {
 	// Generate httpServer config
 	cfg := common.NewConfig()
@@ -49,6 +47,7 @@ func main() {
 
 	// Create grpc httpServer
 	grpcServer := grpc.NewServer()
+	port := os.Getenv("HOTEL_GRPC_PORT")
 
 	// Run the http httpServer on a new goroutine
 	go func() {
