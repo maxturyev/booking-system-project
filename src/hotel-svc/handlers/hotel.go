@@ -40,6 +40,20 @@ func (h *Hotels) GetHotels(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, lh)
 }
 
+func ValidateNumericID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		match, _ := regexp.MatchString(`^\d+$`, id)
+		if !match {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
 // GetHotelByID handles GET request to return a hotel by id
 func (h *Hotels) GetHotelByID(ctx *gin.Context) {
 	h.l.Println("Handle GET")

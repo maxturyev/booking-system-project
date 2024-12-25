@@ -56,6 +56,8 @@ func prometheusView() gin.HandlerFunc {
 	}
 }
 
+const PORT = ":50052"
+
 func main() {
 	// Обработка Прометея
 	prometheus.MustRegister(requestsTotal, requestDuration)
@@ -71,7 +73,7 @@ func main() {
 
 	go func() {
 		// Creating grpc-server
-		lis, err := net.Listen("tcp", ":50052")
+		lis, err := net.Listen("tcp", PORT)
 		if err != nil {
 			l.Fatalf("Error starting server: %v", err)
 		}

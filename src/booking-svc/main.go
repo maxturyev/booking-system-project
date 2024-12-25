@@ -26,17 +26,31 @@ import (
 )
 
 var (
-	requestsTotal = prometheus.NewCounterVec(
+	requestsTotalBooking = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total number of HTTP requests.",
+			Name: "http_requests_total_booking",
+			Help: "Total number of HTTP requests on booking.",
 		},
 		[]string{"method"},
 	)
-	requestDuration = prometheus.NewHistogramVec(
+	requestDurationBooking = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "http_request_duration_seconds",
-			Help: "Duration of HTTP requests.",
+			Name: "http_request_duration_seconds_booking",
+			Help: "Duration of HTTP requests on booking.",
+		},
+		[]string{"method"},
+	)
+	requestsTotalClient = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total_client",
+			Help: "Total number of HTTP requests on client.",
+		},
+		[]string{"method"},
+	)
+	requestDurationClient = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds_client",
+			Help: "Duration of HTTP requests on client.",
 		},
 		[]string{"method"},
 	)
@@ -47,8 +61,18 @@ func handlerBookingPrometheus() gin.HandlerFunc {
 		method := c.Request.Method
 		start := time.Now()
 		elapsed := time.Since(start).Seconds()
-		requestsTotal.WithLabelValues(method).Inc()
-		requestDuration.WithLabelValues(method).Observe(elapsed)
+		requestsTotalBooking.WithLabelValues(method).Inc()
+		requestDurationBooking.WithLabelValues(method).Observe(elapsed)
+	}
+}
+
+func handlerClientPrometheus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		start := time.Now()
+		elapsed := time.Since(start).Seconds()
+		requestsTotalClient.WithLabelValues(method).Inc()
+		requestDurationClient.WithLabelValues(method).Observe(elapsed)
 	}
 }
 
@@ -61,7 +85,7 @@ func prometheusView() gin.HandlerFunc {
 
 func main() {
 	// Обработка Прометея
-	prometheus.MustRegister(requestsTotal, requestDuration)
+	prometheus.MustRegister(requestsTotalBooking, requestDurationBooking, requestsTotalClient, requestDurationClient)
 
 	// Generate http server config
 	cfg := common.NewConfig()
@@ -108,9 +132,9 @@ func main() {
 	// Handle requests for client
 	clientGroup := router.Group("/client")
 	{
-		clientGroup.GET("/", handlerBookingPrometheus(), ch.GetClients)
-		clientGroup.POST("/", handlerBookingPrometheus(), ch.PostClient)
-		clientGroup.PUT("/", handlerBookingPrometheus(), ch.UpdateClient)
+		clientGroup.GET("/", handlerClientPrometheus(), ch.GetClients)
+		clientGroup.POST("/", handlerClientPrometheus(), ch.PostClient)
+		clientGroup.PUT("/", handlerClientPrometheus(), ch.UpdateClient)
 	}
 
 	// Set up a channel to listen to for interrupt signals
@@ -157,7 +181,7 @@ func main() {
 
 	// If we get one of the pre-prescribed syscalls, gracefully terminate the server
 	// while alerting the user
-	log.Printf("Server is shutting down due to %+v\n", interrupt)
+	l.Printf("Server is shutting down due to %+v\n", interrupt)
 	if err := server.Shutdown(ctx); err != nil {
 		l.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}

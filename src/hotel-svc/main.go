@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"syscall"
 	"time"
 
@@ -18,31 +17,74 @@ import (
 	grpcserver "github.com/maxturyev/booking-system-project/hotel-svc/grpc-server"
 	"github.com/maxturyev/booking-system-project/hotel-svc/handlers"
 	pb "github.com/maxturyev/booking-system-project/src/grpc"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
-func validateNumericID() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.Param("id")
+var (
+	requestsTotalHotel = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total_hotel",
+			Help: "Total number of HTTP requests on hotel.",
+		},
+		[]string{"method"},
+	)
+	requestDurationHotel = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds_hotel",
+			Help: "Duration of HTTP requests on hotel.",
+		},
+		[]string{"method"},
+	)
+	requestsTotalHotelier = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total_hotelier",
+			Help: "Total number of HTTP requests on hotelier.",
+		},
+		[]string{"method"},
+	)
+	requestDurationHotelier = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds_hotelier",
+			Help: "Duration of HTTP requests on hotelier.",
+		},
+		[]string{"method"},
+	)
+)
 
-		match, _ := regexp.MatchString(`^\d+$`, id)
-		if !match {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "non numeric id"})
-			c.Abort()
-			return
-		}
-		c.Next()
+func handlerHotelPrometheus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		start := time.Now()
+		elapsed := time.Since(start).Seconds()
+		requestsTotalHotel.WithLabelValues(method).Inc()
+		requestDurationHotel.WithLabelValues(method).Observe(elapsed)
 	}
 }
 
-const port = ":50051"
+func handlerHotelierPrometheus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		start := time.Now()
+		elapsed := time.Since(start).Seconds()
+		requestsTotalHotelier.WithLabelValues(method).Inc()
+		requestDurationHotelier.WithLabelValues(method).Observe(elapsed)
+	}
+}
+
+func prometheusView() gin.HandlerFunc {
+	h := promhttp.Handler()
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+const PORT = ":50051"
 
 func main() {
-	// // Load envs
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	// Обработка Прометея
+	prometheus.MustRegister(requestsTotalHotel, requestDurationHotel, requestsTotalHotelier, requestDurationHotelier)
 
 	// Generate httpServer config
 	cfg := common.NewConfig()
@@ -58,14 +100,14 @@ func main() {
 
 	// Run the http httpServer on a new goroutine
 	go func() {
-		lis, err := net.Listen("tcp", port)
+		lis, err := net.Listen("tcp", PORT)
 		if err != nil {
 			l.Fatalf("failed to create listener: %s", err)
 		}
 
 		pb.RegisterHotelServiceServer(grpcServer, &grpcserver.HotelServer{DB: hotelDb})
 
-		log.Printf("Grpc httpServer started  on port %s", port)
+		l.Printf("Grpc httpServer started on port %s", PORT)
 		if err := grpcServer.Serve(lis); err != nil {
 			l.Fatalf("Ошибка запуска сервера: %v", err)
 		}
@@ -74,6 +116,8 @@ func main() {
 	// Create router and define routes and return that router
 	router := gin.Default()
 
+	router.GET("/metrics", prometheusView())
+
 	// Create handlers
 	hh := handlers.NewHotels(l, hotelDb)
 	hth := handlers.NewHoteliers(l, hotelDb)
@@ -81,17 +125,17 @@ func main() {
 	// Handle requests for hotel
 	hotelGroup := router.Group("/hotel")
 	{
-		hotelGroup.GET("/", hh.GetHotels)
-		hotelGroup.GET("/:id", validateNumericID(), hh.GetHotelByID)
-		hotelGroup.POST("/", hh.PostHotel)
-		hotelGroup.POST("/media", hh.HandleUploadImage)
+		hotelGroup.GET("/", handlerHotelPrometheus(), hh.GetHotels)
+		hotelGroup.GET("/:id", handlerHotelPrometheus(), handlers.ValidateNumericID(), hh.GetHotelByID)
+		hotelGroup.POST("/", handlerHotelPrometheus(), hh.PostHotel)
+		hotelGroup.POST("/media", handlerHotelPrometheus(), hh.HandleUploadImage)
 	}
 
 	// Handle requests for hotelier
 	hotelierGroup := router.Group("/hotelier")
 	{
-		hotelierGroup.GET("/", hth.GetHoteliers)
-		hotelierGroup.POST("/", hth.PostHotelier)
+		hotelierGroup.GET("/", handlerHotelierPrometheus(), hth.GetHoteliers)
+		hotelierGroup.POST("/", handlerHotelierPrometheus(), hth.PostHotelier)
 	}
 
 	// Set up a channel to listen to for interrupt signals
@@ -141,5 +185,4 @@ func main() {
 	if err := httpServer.Shutdown(ctx); err != nil {
 		l.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
-
 }
