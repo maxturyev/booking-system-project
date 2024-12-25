@@ -39,32 +39,28 @@ var (
 	)
 )
 
-func handlerPaymentGetPrometheus() gin.HandlerFunc {
+func handlerPaymentPrometheus() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		method := c.Request.Method
 		start := time.Now()
 		elapsed := time.Since(start).Seconds()
-		requestsTotal.WithLabelValues("GET").Inc()
-		requestDuration.WithLabelValues("GET").Observe(elapsed)
+		requestsTotal.WithLabelValues(method).Inc()
+		requestDuration.WithLabelValues(method).Observe(elapsed)
 	}
 }
 
-func prometheusHandler() gin.HandlerFunc {
+func prometheusView() gin.HandlerFunc {
 	h := promhttp.Handler()
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
+const PORT = ":50052"
+
 func main() {
 	// Обработка Прометея
 	prometheus.MustRegister(requestsTotal, requestDuration)
-
-	start := time.Now()
-	elapsed := time.Since(start).Seconds()
-	requestsTotal.WithLabelValues("GET").Inc()
-	requestDuration.WithLabelValues("GET").Observe(elapsed)
-
-	http.Handle("/metrics", promhttp.Handler())
 
 	// Generate http server config
 	cfg := common.NewConfig()
@@ -77,7 +73,7 @@ func main() {
 
 	go func() {
 		// Creating grpc-server
-		lis, err := net.Listen("tcp", ":50052")
+		lis, err := net.Listen("tcp", PORT)
 		if err != nil {
 			l.Fatalf("Error starting server: %v", err)
 		}
@@ -93,23 +89,12 @@ func main() {
 	// Create router and define routes and return that router
 	router := gin.Default()
 
-	router.GET("/metrics", prometheusHandler())
+	router.GET("/metrics", prometheusView())
 
 	onlyH := handlers.NewPayments(l, hotelDb)
-	// metricsH := handlers.NewPayments(l, hotelDb)
-	// metricsGroup := router.Group("/metrics")
-	// {
-	// 	// paymentGroup.GET("/metrics", promhttp.Handler(), onlyH.ReturnError)
-	// 	metricsGroup.GET("/", metricsH.DoPrometeus)
-	// 	// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
-	// 	// paymentGroup.POST("/", onlyH.PostHotel)
-	// }
 	paymentGroup := router.Group("/payment")
 	{
-		// paymentGroup.GET("/metrics", promhttp.Handler(), onlyH.ReturnError)
-		paymentGroup.GET("/", handlerPaymentGetPrometheus(), onlyH.ReturnError)
-		// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
-		// paymentGroup.POST("/", onlyH.PostHotel)
+		paymentGroup.GET("/", handlerPaymentPrometheus(), onlyH.ReturnError)
 	}
 
 	// Set up a channel to listen to for interrupt signals

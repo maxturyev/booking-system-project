@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/maxturyev/booking-system-project/booking-svc/kafka"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -23,12 +25,67 @@ import (
 	"github.com/maxturyev/booking-system-project/booking-svc/postgres"
 )
 
+var (
+	requestsTotalBooking = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total_booking",
+			Help: "Total number of HTTP requests on booking.",
+		},
+		[]string{"method"},
+	)
+	requestDurationBooking = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds_booking",
+			Help: "Duration of HTTP requests on booking.",
+		},
+		[]string{"method"},
+	)
+	requestsTotalClient = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total_client",
+			Help: "Total number of HTTP requests on client.",
+		},
+		[]string{"method"},
+	)
+	requestDurationClient = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "http_request_duration_seconds_client",
+			Help: "Duration of HTTP requests on client.",
+		},
+		[]string{"method"},
+	)
+)
+
+func handlerBookingPrometheus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		start := time.Now()
+		elapsed := time.Since(start).Seconds()
+		requestsTotalBooking.WithLabelValues(method).Inc()
+		requestDurationBooking.WithLabelValues(method).Observe(elapsed)
+	}
+}
+
+func handlerClientPrometheus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		start := time.Now()
+		elapsed := time.Since(start).Seconds()
+		requestsTotalClient.WithLabelValues(method).Inc()
+		requestDurationClient.WithLabelValues(method).Observe(elapsed)
+	}
+}
+
+func prometheusView() gin.HandlerFunc {
+	h := promhttp.Handler()
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
 func main() {
-	// // Load envs
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	// Обработка Прометея
+	prometheus.MustRegister(requestsTotalBooking, requestDurationBooking, requestsTotalClient, requestDurationClient)
 
 	// Generate http server config
 	cfg := common.NewConfig()
@@ -57,25 +114,27 @@ func main() {
 
 	router := gin.Default()
 
+	router.GET("/metrics", prometheusView())
+
 	bh := handlers.NewBookings(l, bookingDb, kafkaConn)
 	ch := handlers.NewClients(l, bookingDb)
 
 	// Handle requests for booking
 	bookingGroup := router.Group("/booking")
 	{
-		bookingGroup.GET("/", bh.GetBookings)
-		bookingGroup.POST("/", bh.PostBooking)
-		bookingGroup.PUT("/", bh.PutBooking)
-		bookingGroup.GET("/hotel", bh.GetHotels(grpcClient))
-		bookingGroup.GET("/hotel/:id", bh.ValidateNumericID(), bh.GetHotelPriceByID(grpcClient))
+		bookingGroup.GET("/", handlerBookingPrometheus(), bh.GetBookings)
+		bookingGroup.POST("/", handlerBookingPrometheus(), bh.PostBooking)
+		bookingGroup.PUT("/", handlerBookingPrometheus(), bh.PutBooking)
+		bookingGroup.GET("/hotel", handlerBookingPrometheus(), bh.GetHotels(grpcClient))
+		bookingGroup.GET("/hotel/:id", handlerBookingPrometheus(), bh.ValidateNumericID(), bh.GetHotelPriceByID(grpcClient))
 	}
 
 	// Handle requests for client
 	clientGroup := router.Group("/client")
 	{
-		clientGroup.GET("/", ch.GetClients)
-		clientGroup.POST("/", ch.PostClient)
-		clientGroup.PUT("/", ch.UpdateClient)
+		clientGroup.GET("/", handlerClientPrometheus(), ch.GetClients)
+		clientGroup.POST("/", handlerClientPrometheus(), ch.PostClient)
+		clientGroup.PUT("/", handlerClientPrometheus(), ch.UpdateClient)
 	}
 
 	// Set up a channel to listen to for interrupt signals
@@ -103,7 +162,7 @@ func main() {
 	signal.Notify(runChan, os.Interrupt, syscall.SIGTSTP)
 
 	// Alert the user that the server is starting
-	log.Printf("Server is starting on %s\n", server.Addr)
+	l.Printf("Server is starting on %s\n", server.Addr)
 
 	// Run the server on a new goroutine
 	go func() {
@@ -111,7 +170,7 @@ func main() {
 			if errors.Is(err, http.ErrServerClosed) {
 				// Normal interrupt operation, ignore
 			} else {
-				log.Fatalf("Server failed to start due to err: %v", err)
+				l.Fatalf("Server failed to start due to err: %v", err)
 			}
 		}
 	}()
@@ -122,8 +181,8 @@ func main() {
 
 	// If we get one of the pre-prescribed syscalls, gracefully terminate the server
 	// while alerting the user
-	log.Printf("Server is shutting down due to %+v\n", interrupt)
+	l.Printf("Server is shutting down due to %+v\n", interrupt)
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
+		l.Fatalf("Server was unable to gracefully shutdown due to err: %+v", err)
 	}
 }
