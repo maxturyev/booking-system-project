@@ -18,6 +18,7 @@ import (
 	grpcserver "github.com/maxturyev/booking-system-project/payment-svc/grpc-server"
 	"github.com/maxturyev/booking-system-project/payment-svc/handlers"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
@@ -48,7 +49,15 @@ func handlerPaymentGetPrometheus() gin.HandlerFunc {
 }
 
 func main() {
+	// Обработка Прометея
 	prometheus.MustRegister(requestsTotal, requestDuration)
+
+	start := time.Now()
+	elapsed := time.Since(start).Seconds()
+	requestsTotal.WithLabelValues("GET").Inc()
+	requestDuration.WithLabelValues("GET").Observe(elapsed)
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	// Generate http server config
 	cfg := common.NewConfig()
@@ -78,8 +87,17 @@ func main() {
 	router := gin.Default()
 
 	onlyH := handlers.NewPayments(l, hotelDb)
+	metricsH := handlers.NewPayments(l, hotelDb)
+	metricsGroup := router.Group("/metrics")
+	{
+		// paymentGroup.GET("/metrics", promhttp.Handler(), onlyH.ReturnError)
+		metricsGroup.GET("/", metricsH.DoPrometeus)
+		// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
+		// paymentGroup.POST("/", onlyH.PostHotel)
+	}
 	paymentGroup := router.Group("/payment")
 	{
+		// paymentGroup.GET("/metrics", promhttp.Handler(), onlyH.ReturnError)
 		paymentGroup.GET("/", handlerPaymentGetPrometheus(), onlyH.ReturnError)
 		// paymentGroup.GET("/:id", validateNumericID(), onlyH.GetHotelByID)
 		// paymentGroup.POST("/", onlyH.PostHotel)
