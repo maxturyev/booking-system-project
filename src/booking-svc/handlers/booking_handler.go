@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"context"
-	kafkaGo "github.com/segmentio/kafka-go"
 	"io"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	kafkaGo "github.com/segmentio/kafka-go"
 
 	"github.com/gin-gonic/gin"
 	"github.com/maxturyev/booking-system-project/src/booking-svc/kafka"
@@ -64,8 +65,20 @@ func (b *Bookings) PutBooking(ctx *gin.Context) {
 	}
 }
 
+func getHotelPrice(ctx *gin.Context, grpcClient pb.HotelServiceClient, hotelID int) (float32, error) {
+	ctxGrpc, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	response, err := grpcClient.GetHotelPriceByID(ctxGrpc, &pb.GetHotelPriceByIDRequest{Id: int32(hotelID)})
+	if err != nil {
+		return 0, err
+	}
+
+	return response.RoomPrice, nil
+}
+
 // PostBooking handles a POST request to create a booking
-func (b *Bookings) PostBooking(ctx *gin.Context) {
+func (b *Bookings) PostBooking(ctx *gin.Context, grpcClient pb.HotelServiceClient) {
 	b.l.Println("Handle POST booking")
 
 	var booking models.Booking
@@ -74,6 +87,23 @@ func (b *Bookings) PostBooking(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&booking); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+
+	// Check if "price" and "hotelId" is provided in the input
+	if ctx.Request.Body != nil {
+		var rawInput map[string]interface{}
+		if err := ctx.BindJSON(&rawInput); err == nil {
+			if _, existsPrice := rawInput["price"]; existsPrice {
+				if _, exitstHotelID := rawInput["hotel_id"]; exitstHotelID {
+					ctx.JSON(http.StatusBadRequest, gin.H{"error": "field 'price' is not allowed"})
+					return
+				}
+			}
+		}
+	}
+	id, _ := strconv.Atoi(ctx.Param("hotel_id"))
+	price, _ := getHotelPrice(ctx, grpcClient, id)
+	booking.HotelID = id
+	booking.Price = price
 
 	// Add booking to database
 	if err := postgres.CreateBooking(b.db, booking); err != nil {
