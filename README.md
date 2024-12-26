@@ -30,6 +30,12 @@ export HOTEL_SERVICE_ADDR=kafka:50051
 source ~/.zshrc
 ```
 
+После этого можно тестировать любой сервис, активировав его, например сервис бронирования:
+
+```go
+go run ./src/bookking-svc/main.go
+```
+
 ## Версия 0.1
 
 ### API
