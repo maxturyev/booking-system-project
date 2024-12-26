@@ -4,64 +4,30 @@
 
 Для локального тестирования необходимо добавить переменные окружения в текущий процесс с помощью следующих комманд:
 
-```zsh
+```bash
 # Database config
-export POSTGRES_HOST=localhost
-export POSTGRES_PORT=5432
+export POSTGRES_HOTEL_HOST=hotel-db
+export POSTGRES_HOTEL_PORT=5432
+export POSTGRES_BOOKING_HOST=booking-db
+export POSTGRES_BOOKING_PORT=5433
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=postgres
 export HOTEL_DB=hotels_data
 export BOOKING_DB=booking_data
 
-# Service ports
-export HOTEL_DB_PORT=5433
-export BOOKING_DB_PORT=5434
-export HOTEL_HTTP_PORT=9090
-export BOOKING_HTTP_PORT=9091
-export BOOKING_KAFKA_PORT=9093
-export NOTIFICATION_KAFKA_PORT=9094
-export KAFKA_PORT=9092
-export HOTEL_GRPC_PORT=50051
-
 # Service addresses
 export KAFKA_SERVER_ADDR=kafka:9092
 export HOTEL_SERVICE_ADDR=kafka:50051
 
-source ~/.zshrc
+source ~/.bashrc
 ```
 
-После этого можно тестировать любой сервис, активировав его, например сервис бронирования:
+После этого можно тестировать любой сервис, активировав его, например сервис отеля:
 
-```go
-go run ./src/bookking-svc/main.go
+```bash
+cd src/hotel-svc
+go run main.go
 ```
-
-## Версия 0.1
-
-### API
-
-- Добавлены интерфейсы для отеля, отелье и клиента
-- Добавлены handler'ы простых http-запросов
-- Реализована передача и хранение данных в слайсах 
-
-### Базы данных
-
-- Добавлена база данных отеля
-- Проверено подключение и работа с бд через библиотеку `gorm`
-- Условие использования Postgresql выполнено
-- Продолжается работа над написанием активирующих распаковку команд
-
-## Версия 0.2
-
-### Базы данных
-
-- Настроена миграция моделей в БД, как таблиц, с помощью `gorm.AutoMigrate`
-- Настроены некоторые CRUD-операции с БД отеля
-
-### API
-
-- Структуры API сущностей перенесены в `/models`
-- Параметры запуска сервера перенесены в `server_config.go`
 
 # Текущее состояние проекта
 
