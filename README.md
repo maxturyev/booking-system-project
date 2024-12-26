@@ -2,6 +2,34 @@
 
 Проект по разработке системы бронирования номеров
 
+Для локального тестирования необходимо добавить переменные окружения в текущий процесс с помощью следующих комманд:
+
+```zsh
+# Database config
+export POSTGRES_HOST=localhost
+export POSTGRES_PORT=5432
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=postgres
+export HOTEL_DB=hotels_data
+export BOOKING_DB=booking_data
+
+# Service ports
+export HOTEL_DB_PORT=5433
+export BOOKING_DB_PORT=5434
+export HOTEL_HTTP_PORT=9090
+export BOOKING_HTTP_PORT=9091
+export BOOKING_KAFKA_PORT=9093
+export NOTIFICATION_KAFKA_PORT=9094
+export KAFKA_PORT=9092
+export HOTEL_GRPC_PORT=50051
+
+# Service addresses
+export KAFKA_SERVER_ADDR=kafka:9092
+export HOTEL_SERVICE_ADDR=kafka:50051
+
+source ~/.zshrc
+```
+
 ## Версия 0.1
 
 ### API
