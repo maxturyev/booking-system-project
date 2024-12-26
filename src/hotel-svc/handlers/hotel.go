@@ -147,8 +147,7 @@ func (h *Hotels) HandleUploadImage(ctx *gin.Context) {
 }
 
 func checkCorrectFieldHotel(hotel models.Hotel) bool {
-	name, _ := regexp.MatchString(`^[A-Z][a-z]{0,30}$`, hotel.Name)
 	address, _ := regexp.MatchString(`^\w{0,30}$`, hotel.Address)
 	country, _ := regexp.MatchString(`^[A-Z][a-z]{0,30}$`, hotel.Country)
-	return name && address && country
+	return address && country
 }

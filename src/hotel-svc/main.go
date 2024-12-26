@@ -126,11 +126,11 @@ func main() {
 	// Handle requests for hotel
 	hotelGroup := router.Group("/hotel")
 	{
-
 		hotelGroup.GET("/", handlerHotelPrometheus(), hh.GetHotels)
 		hotelGroup.GET("/:id", handlerHotelPrometheus(), handlers.ValidateNumericID(), hh.GetHotelByID)
 		hotelGroup.POST("/", handlerHotelPrometheus(), hh.PostHotel)
 		hotelGroup.POST("/media", handlerHotelPrometheus(), hh.HandleUploadImage)
+		hotelGroup.PUT("/", handlerHotelPrometheus(), hh.PutHotel)
 	}
 
 	// Handle requests for hotelier

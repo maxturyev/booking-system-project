@@ -4,12 +4,19 @@ services:
       context: .
       dockerfile: src/hotel-svc/Dockerfile
     image: booking-system/hotel
-    container_name: hotel
+    container_name: hotel-svc
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOTEL_HOST}
+      POSTGRES_PORT: ${POSTGRES_HOTEL_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${HOTEL_DB}
     ports:
       - "9090:9090"
       - "50051:50051"
     depends_on:
-      - hotel-db
+      hotel-db:
+        condition: service_healthy
 
   hotel-db:
     image: postgres:latest
@@ -19,7 +26,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${HOTEL_DB}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - hotel-postgres-data:/var/lib/postgresql/data
 
@@ -28,17 +35,25 @@ services:
       context: .
       dockerfile: src/booking-svc/Dockerfile
     image: booking-system/booking
-    container_name: booking
+    container_name: booking-svc
     environment:
+      POSTGRES_HOST: ${POSTGRES_BOOKING_HOST}
+      POSTGRES_PORT: ${POSTGRES_BOOKING_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${BOOKING_DB}
       HOTEL_SERVICE_ADDR: ${HOTEL_SERVICE_ADDR}
       KAFKA_SERVER_ADDR: ${KAFKA_SERVER_ADDR}
     ports:
       - "9091:9091"
       - "50052:50051"
     depends_on:
-      - booking-db
-      - kafka
-      - hotel-svc
+      booking-db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      hotel-svc:
+        condition: service_started
 
   booking-db:
     image: postgres:latest
@@ -48,7 +63,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${BOOKING_DB}
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
       - booking-postgres-data:/var/lib/postgresql/data
 

@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-WORKDIR /app/src/hotel-svc
+WORKDIR /app/src/notification-svc
 
 RUN go mod tidy
 RUN go build -o notification-svc main.go
