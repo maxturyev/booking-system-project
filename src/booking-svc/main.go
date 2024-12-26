@@ -121,7 +121,7 @@ func main() {
 	bookingGroup := router.Group("/booking")
 	{
 		bookingGroup.GET("/", handlerBookingPrometheus(), bh.GetBookings)
-		bookingGroup.POST("/", handlerBookingPrometheus(), bh.PostBooking)
+		bookingGroup.POST("/:id", handlerBookingPrometheus(), func(ctx *gin.Context) { bh.PostBooking(ctx, grpcClient) })
 		bookingGroup.PUT("/", handlerBookingPrometheus(), bh.PutBooking)
 		bookingGroup.GET("/hotel", handlerBookingPrometheus(), bh.GetHotels(grpcClient))
 		bookingGroup.GET("/hotel/:id", handlerBookingPrometheus(), bh.ValidateNumericID(), bh.GetHotelPriceByID(grpcClient))

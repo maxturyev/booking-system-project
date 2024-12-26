@@ -8,7 +8,7 @@ type Booking struct {
 	HotelID   int       `json:"hotel_id"`
 	DateStart time.Time `json:"date_start"`
 	DateEnd   time.Time `json:"date_end"`
-	Price     int       `json:"price"`
+	Price     float32   `json:"price"`
 	Status    string    `json:"status"`
 	ClientID  int       `json:"client_id"`
 }
